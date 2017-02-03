@@ -1,4 +1,45 @@
 {
   "name": "projj",
-  "version": "0.0.0"
+  "version": "1.0.0",
+  "description": "",
+  "dependencies": {
+    "common-bin": "^1.0.0",
+    "giturl": "^1.0.0",
+    "ini": "^1.3.4",
+    "inquirer": "^3.0.1",
+    "mkdirp": "^0.5.1",
+    "mz": "^2.6.0",
+    "zlogger": "^1.1.0"
+  },
+  "devDependencies": {
+    "autod": "^2.7.1",
+    "coffee": "^3.3.0",
+    "egg-bin": "^2.0.2",
+    "egg-ci": "^1.1.0",
+    "eslint": "^3.14.1",
+    "eslint-config-egg": "^3.2.0",
+    "mm": "^2.1.0",
+    "supertest": "^3.0.0",
+    "webstorm-disable-index": "^1.1.2"
+  },
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "scripts": {
+    "autod": "autod",
+    "lint": "eslint .",
+    "test": "npm run lint -- --fix && npm run test-local",
+    "test-local": "egg-bin test",
+    "cov": "egg-bin cov",
+    "ci": "npm run lint && npm run cov"
+  },
+  "ci": {
+    "version": "6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:popomore/projj.git"
+  },
+  "author": "popomore <sakura9515@gmail.com>",
+  "license": "MIT"
 }
