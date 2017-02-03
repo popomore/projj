@@ -1,3 +1,3 @@
 # projj
 
-Project Manager
+Repository manager

@@ -20,7 +20,7 @@ describe('test/projj_add.test.js', () => {
 
   it('should add a git repo', done => {
     const home = path.join(fixtures, 'base-tmp');
-    const repo = 'git@github.com:popomore/projj.git';
+    const repo = 'https://github.com/popomore/projj.git';
     const target = path.join(tmp, 'github.com/popomore/projj');
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'add', repo ])
@@ -39,7 +39,7 @@ describe('test/projj_add.test.js', () => {
 
   it('should throw when target exists', function* () {
     const home = path.join(fixtures, 'base-tmp');
-    const repo = 'git@github.com:popomore/projj.git';
+    const repo = 'https://github.com/popomore/projj.git';
     const target = path.join(tmp, 'github.com/popomore/projj');
     mm(process.env, 'HOME', home);
     yield mkdir(target);
@@ -53,11 +53,11 @@ describe('test/projj_add.test.js', () => {
 
   it('should run hook', done => {
     const home = path.join(fixtures, 'hook-add');
-    const repo = 'git@github.com:popomore/test.git';
+    const repo = 'https://github.com/popomore/test.git';
     const target = path.join(tmp, 'github.com/popomore/test');
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'add', repo ])
-    .debug()
+    // .debug()
     .expect('stdout', new RegExp(`pre hook, cwd ${process.cwd()}`))
     .expect('stdout', new RegExp(`post hook, cwd ${target}`))
     .expect('stdout', /pre hook, get package name projj/)
