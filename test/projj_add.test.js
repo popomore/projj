@@ -25,7 +25,8 @@ describe('test/projj_add.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'add', repo ])
     // .debug()
-    .expect('stdout', new RegExp(`add repo ${repo} to ${target}`))
+    .expect('stdout', new RegExp(`Start adding repository ${repo}`))
+    .expect('stdout', new RegExp(`Cloning into ${target}`))
     .expect('code', 0)
     .end(err => {
       assert.ifError(err);

@@ -13,7 +13,8 @@ describe('test/projj.test.js', () => {
     .expect('stdout', /Usage: {2}\[command] \[options]/)
     .expect('stdout', /init - initialize configuration/)
     .expect('stdout', /add - add repository/)
-    .expect('stdout', /run - run a hook/)
+    .expect('stdout', /run - run hook in current directory/)
+    .expect('stdout', /runall - run hook in every repository/)
     .expect('code', 0)
     .end(done);
   });
