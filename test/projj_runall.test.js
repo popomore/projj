@@ -10,7 +10,7 @@ const fixtures = path.join(__dirname, 'fixtures');
 const tmp = path.join(fixtures, 'tmp');
 
 
-describe('test/projj_run.test.js', () => {
+describe('test/projj_runall.test.js', () => {
 
   afterEach(mm.restore);
   afterEach(done => rimraf(tmp, done));
@@ -18,20 +18,20 @@ describe('test/projj_run.test.js', () => {
   it('should run hook that do not exist', done => {
     const home = path.join(fixtures, 'hook');
     mm(process.env, 'HOME', home);
-    coffee.fork(binfile, [ 'run', 'noexist' ])
+    coffee.fork(binfile, [ 'runall', 'noexist' ])
     // .debug()
     .expect('stderr', /hook "noexist" don't exist/)
     .expect('code', 1)
     .end(done);
   });
 
-  it('should run hook in cwd', done => {
+  it('should run hook in every repo', done => {
     const home = path.join(fixtures, 'hook');
-    const cwd = path.join(home, 'github.com/popomore/test1');
     mm(process.env, 'HOME', home);
-    coffee.fork(binfile, [ 'run', 'custom' ], { cwd })
+    coffee.fork(binfile, [ 'runall', 'custom' ])
     // .debug()
     .expect('stdout', new RegExp(`get package name test1 from ${home}/github.com/popomore/test1`))
+    .expect('stdout', new RegExp(`get package name test2 from ${home}/github.com/popomore/test2`))
     .expect('code', 0)
     .end(done);
   });
