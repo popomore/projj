@@ -36,4 +36,14 @@ describe('test/projj_run.test.js', () => {
     .end(done);
   });
 
+  it('should using buildin hook when has same name', done => {
+    const home = path.join(fixtures, 'hook');
+    mm(process.env, 'HOME', home);
+    coffee.fork(binfile, [ 'run', 'ls' ])
+    // .debug()
+    .expect('stdout', /buildin ls/)
+    .expect('code', 0)
+    .end(done);
+  });
+
 });
