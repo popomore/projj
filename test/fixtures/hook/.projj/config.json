@@ -2,7 +2,8 @@
   "base": "..",
   "hooks": {
     "custom": "custom",
-    "ls": "ls"
+    "ls": "ls",
+    "run_config": "run_config"
   },
-  "globalHooks": {}
+  "run_config": true
 }
