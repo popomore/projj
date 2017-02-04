@@ -1,6 +1,6 @@
 {
   "name": "projj",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-alpha.4",
   "description": "",
   "dependencies": {
     "chalk": "^1.1.3",

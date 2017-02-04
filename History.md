@@ -1,4 +1,12 @@
 
+1.0.0-alpha.4 / 2017-02-04
+==========================
+
+  * refactor: improve console (#11)
+  * feat: pass hook config to hook command (#10)
+  * feat: use buildin hook first (#8)
+  * feat: add runall command (#7)
+
 1.0.0-alpha.3 / 2017-02-04
 ==========================
 
