@@ -46,4 +46,14 @@ describe('test/projj_run.test.js', () => {
     .end(done);
   });
 
+  it('should get hook config', done => {
+    const home = path.join(fixtures, 'hook');
+    mm(process.env, 'HOME', home);
+    coffee.fork(binfile, [ 'run', 'run_config' ])
+    // .debug()
+    .expect('stdout', /get config from env true/)
+    .expect('code', 0)
+    .end(done);
+  });
+
 });

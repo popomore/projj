@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+
+const config = JSON.parse(process.env.PROJJ_HOOK_CONFIG);
+console.log('get config from env %s', config)
