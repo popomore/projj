@@ -22,7 +22,7 @@ describe('test/projj_init.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'init' ])
     // .debug()
-    .expect('stdout', `> base directory: ${home}\n`)
+    .expect('stdout', new RegExp(`Set base directory: ${home}\n`))
     .expect('code', 0)
     .end(done);
   });
@@ -32,7 +32,7 @@ describe('test/projj_init.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'init' ])
     // .debug()
-    .expect('stdout', `> base directory: ${home}/code\n`)
+    .expect('stdout', new RegExp(`Set base directory: ${home}/code\n`))
     .expect('code', 0)
     .end(done);
   });
@@ -42,7 +42,7 @@ describe('test/projj_init.test.js', () => {
     coffee.fork(binfile, [ 'init' ])
     // .debug()
     .expect('stdout', /Set base directory: /)
-    .expect('stdout', /> base directory: \/home/)
+    .expect('stdout', /Set base directory: \/home\n/)
     .expect('code', 0)
     .write('/home')
     .end(err => {
@@ -52,5 +52,15 @@ describe('test/projj_init.test.js', () => {
       assert(content === '{\n  "base": "/home",\n  "hooks": {}\n}');
       done();
     });
+  });
+
+  it('should set base with relative path', done => {
+    mm(process.env, 'HOME', tmp);
+    coffee.fork(binfile, [ 'init' ])
+    // .debug()
+    .expect('stdout', new RegExp(`Set base directory: ${process.cwd()}/code\n`))
+    .expect('code', 0)
+    .write('code')
+    .end(done);
   });
 });

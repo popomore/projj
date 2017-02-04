@@ -20,7 +20,7 @@ describe('test/projj_run.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'run', 'noexist' ])
     // .debug()
-    .expect('stderr', /hook "noexist" don't exist/)
+    .expect('stderr', /Hook "noexist" don't exist/)
     .expect('code', 1)
     .end(done);
   });
