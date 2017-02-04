@@ -11,7 +11,10 @@ describe('test/projj.test.js', () => {
     coffee.fork(binfile, [])
     // .debug()
     .expect('stdout', /Usage: {2}\[command] \[options]/)
-    .expect('code', 1)
+    .expect('stdout', /init - initialize configuration/)
+    .expect('stdout', /add - add repository/)
+    .expect('stdout', /run - run a hook/)
+    .expect('code', 0)
     .end(done);
   });
 
