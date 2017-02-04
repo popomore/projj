@@ -47,9 +47,9 @@ describe('test/projj_init.test.js', () => {
     .write('/home')
     .end(err => {
       assert.ifError(err);
-      assert(fs.existsSync(path.join(tmp, '.projj/config')));
-      const content = fs.readFileSync(path.join(tmp, '.projj/config'), 'utf8');
-      assert(content === 'base = /home\n');
+      assert(fs.existsSync(path.join(tmp, '.projj/config.json')));
+      const content = fs.readFileSync(path.join(tmp, '.projj/config.json'), 'utf8');
+      assert(content === '{\n  "base": "/home",\n  "hooks": {}\n}');
       done();
     });
   });
