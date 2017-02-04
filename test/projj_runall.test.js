@@ -30,6 +30,8 @@ describe('test/projj_runall.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'runall', 'custom' ])
     // .debug()
+    .expect('stdout', /Run hook custom for github.com\/popomore\/test1/)
+    .expect('stdout', /Run hook custom for github.com\/popomore\/test2/)
     .expect('stdout', new RegExp(`get package name test1 from ${home}/github.com/popomore/test1`))
     .expect('stdout', new RegExp(`get package name test2 from ${home}/github.com/popomore/test2`))
     .expect('code', 0)

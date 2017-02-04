@@ -31,6 +31,7 @@ describe('test/projj_run.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'run', 'custom' ], { cwd })
     // .debug()
+    .expect('stdout', new RegExp(`Run hook custom for ${home}/github.com/popomore/test1`))
     .expect('stdout', new RegExp(`get package name test1 from ${home}/github.com/popomore/test1`))
     .expect('code', 0)
     .end(done);
