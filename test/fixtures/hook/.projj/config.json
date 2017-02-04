@@ -1,0 +1,7 @@
+{
+  "base": "..",
+  "hooks": {
+    "custom": "custom"
+  },
+  "globalHooks": {}
+}

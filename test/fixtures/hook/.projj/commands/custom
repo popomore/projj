@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+
+const path = require('path');
+
+const cwd = process.cwd();
+const pkg = require(path.join(cwd, 'package.json'));
+console.log('get package name %s from %s', pkg.name, cwd);
