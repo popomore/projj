@@ -1,4 +1,10 @@
 
+1.1.0 / 2017-02-06
+==================
+
+  * refactor: move commands to one directory (#19)
+  * feat: support projj import (#16)
+
 1.0.0 / 2017-02-04
 ==================
 
