@@ -1,4 +1,4 @@
-node_modules/
+/node_modules/
 coverage/
 cache.json
 !test/fixtures/hook/.projj/cache.json
