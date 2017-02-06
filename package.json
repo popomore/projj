@@ -1,6 +1,6 @@
 {
   "name": "projj",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Manage repository easily.",
   "dependencies": {
     "chalk": "^1.1.3",
