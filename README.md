@@ -83,6 +83,14 @@ it's just like `git clone`, but the repository will be cached by projj. You can 
 
 If you have some repositories in `~/code`, projj can import by `projj import ~/code`.
 
+### Find Repository
+
+projj provide a easy way to find the location of your repositories.
+
+```bash
+$ projj find [repo]
+```
+
 ## Hook
 
 Hook is flexible when manage repositories.
