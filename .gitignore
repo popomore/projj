@@ -2,3 +2,4 @@
 coverage/
 cache.json
 !test/fixtures/hook/.projj/cache.json
+!test/fixtures/find/.projj/cache.json
