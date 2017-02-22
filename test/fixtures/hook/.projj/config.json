@@ -3,7 +3,8 @@
   "hooks": {
     "custom": "custom",
     "ls": "ls",
-    "run_config": "run_config"
+    "run_config": "run_config",
+    "error": "exit 1"
   },
   "run_config": true
 }
