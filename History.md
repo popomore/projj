@@ -1,4 +1,9 @@
 
+1.2.1 / 2017-02-22
+==================
+
+  * fix: should continue run hook when one hook error (#26)
+
 1.2.0 / 2017-02-20
 ==================
 
