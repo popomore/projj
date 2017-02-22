@@ -38,4 +38,15 @@ describe('test/projj_runall.test.js', () => {
     .end(done);
   });
 
+  it('should run all hooks if one has error', done => {
+    const home = path.join(fixtures, 'hook');
+    mm(process.env, 'HOME', home);
+    coffee.fork(binfile, [ 'runall', 'error' ])
+    // .debug()
+    .expect('stdout', /Run hook error for github.com\/popomore\/test1/)
+    .expect('stdout', /Run hook error for github.com\/popomore\/test2/)
+    .expect('stderr', /Run "sh -c exit 1" error, exit code 1/)
+    .expect('code', 0)
+    .end(done);
+  });
 });
