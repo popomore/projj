@@ -3,7 +3,9 @@
 const path = require('path');
 const coffee = require('coffee');
 const mm = require('mm');
-const rimraf = require('rimraf');
+const rimraf = require('mz-modules/rimraf');
+const fs = require('mz/fs');
+
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -11,12 +13,17 @@ const tmp = path.join(fixtures, 'tmp');
 
 
 describe('test/projj_runall.test.js', () => {
+  const home = path.join(fixtures, 'hook');
+  const content = JSON.stringify({
+    'github.com/popomore/test1': {},
+    'github.com/popomore/test2': {},
+  });
 
+  before(() => fs.writeFile(path.join(home, '.projj/cache.json'), content));
   afterEach(mm.restore);
-  afterEach(done => rimraf(tmp, done));
+  afterEach(() => rimraf(tmp));
 
   it('should run hook that do not exist', done => {
-    const home = path.join(fixtures, 'hook');
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'runall', 'noexist' ])
     // .debug()
@@ -26,7 +33,6 @@ describe('test/projj_runall.test.js', () => {
   });
 
   it('should run hook in every repo', done => {
-    const home = path.join(fixtures, 'hook');
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'runall', 'custom' ])
     // .debug()
@@ -39,7 +45,6 @@ describe('test/projj_runall.test.js', () => {
   });
 
   it('should run all hooks if one has error', done => {
-    const home = path.join(fixtures, 'hook');
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'runall', 'error' ])
     // .debug()

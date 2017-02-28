@@ -3,7 +3,7 @@
 const path = require('path');
 const coffee = require('coffee');
 const mm = require('mm');
-const rimraf = require('rimraf');
+const rimraf = require('mz-modules/rimraf');
 const runscript = require('runscript');
 const mkdirp = require('mkdirp');
 
@@ -21,8 +21,8 @@ describe('test/projj_import.test.js', () => {
     mm(process.env, 'HOME', home);
   });
   afterEach(mm.restore);
-  afterEach(done => rimraf(tmp, done));
-  afterEach(done => rimraf(path.join(repo, '.git'), done));
+  afterEach(() => rimraf(tmp));
+  afterEach(() => rimraf(path.join(repo, '.git')));
 
   describe('when origin url exists', () => {
     before(function* () {
@@ -33,7 +33,7 @@ describe('test/projj_import.test.js', () => {
 
     it('should import from it', function* () {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
-      .debug()
+      // .debug()
       .expect('stdout', /importing repository https:\/\/github.com\/popomore\/projj.git/)
       .expect('stdout', new RegExp(`Cloning into ${target}`))
       .expect('stdout', /preadd/)
@@ -101,7 +101,7 @@ describe('test/projj_import.test.js', () => {
         cwd: repo,
       });
     });
-    after(done => rimraf(path.join(repo, '.git'), done));
+    after(() => rimraf(path.join(repo, '.git')));
 
     it('should ignore', function* () {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
