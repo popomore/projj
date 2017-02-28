@@ -1,4 +1,10 @@
 
+1.3.0 / 2017-02-28
+==================
+
+  * feat: add command sync (#28)
+  * refactor: split cache to cache.js (#27)
+
 1.2.1 / 2017-02-22
 ==================
 
