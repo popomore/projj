@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const coffee = require('coffee');
 const mm = require('mm');
-const rimraf = require('rimraf');
+const rimraf = require('mz-modules/rimraf');
 const assert = require('assert');
 const mkdirp = require('mkdirp');
 
@@ -16,7 +16,7 @@ const tmp = path.join(fixtures, 'tmp');
 describe('test/projj_add.test.js', () => {
 
   afterEach(mm.restore);
-  afterEach(done => rimraf(tmp, done));
+  afterEach(() => rimraf(tmp));
 
   it('should add a git repo', done => {
     const home = path.join(fixtures, 'base-tmp');

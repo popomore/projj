@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const coffee = require('coffee');
 const mm = require('mm');
-const rimraf = require('rimraf');
+const rimraf = require('mz-modules/rimraf');
 const assert = require('assert');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
@@ -15,7 +15,7 @@ const tmp = path.join(fixtures, 'tmp');
 describe('test/projj_init.test.js', () => {
 
   afterEach(mm.restore);
-  afterEach(done => rimraf(tmp, done));
+  afterEach(() => rimraf(tmp));
 
   it('should get base directory with relative path', done => {
     const home = path.join(fixtures, 'base-relative');

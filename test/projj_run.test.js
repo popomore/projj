@@ -3,7 +3,7 @@
 const path = require('path');
 const coffee = require('coffee');
 const mm = require('mm');
-const rimraf = require('rimraf');
+const rimraf = require('mz-modules/rimraf');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -13,7 +13,7 @@ const tmp = path.join(fixtures, 'tmp');
 describe('test/projj_run.test.js', () => {
 
   afterEach(mm.restore);
-  afterEach(done => rimraf(tmp, done));
+  afterEach(() => rimraf(tmp));
 
   it('should run hook that do not exist', done => {
     const home = path.join(fixtures, 'hook');

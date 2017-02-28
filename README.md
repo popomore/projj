@@ -91,6 +91,10 @@ projj provide a easy way to find the location of your repositories.
 $ projj find [repo]
 ```
 
+### Sync
+
+`projj sync` will check the repository in cache.json whether exists, the repository will be removed from cache if not exist.
+
 ## Hook
 
 Hook is flexible when manage repositories.
