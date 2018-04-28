@@ -83,6 +83,8 @@ it's just like `git clone`, but the repository will be cached by projj. You can 
 
 If you have some repositories in `~/code`, projj can import by `projj import ~/code`.
 
+Or projj can import repositories from `cache.json` when you change laptop by `projj import --cache`
+
 ### Find Repository
 
 projj provide a easy way to find the location of your repositories.
