@@ -1,4 +1,10 @@
 
+1.4.0 / 2018-04-28
+==================
+
+**features**
+  * [[`543567f`](http://github.com/popomore/projj/commit/543567ff09f298c82333fd26ed0b2fc8d92117ff)] - feat: import --cache (#29) (Haoliang Gao <<sakura9515@gmail.com>>)
+
 1.3.0 / 2017-02-28
 ==================
 
