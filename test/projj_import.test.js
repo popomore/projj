@@ -6,6 +6,7 @@ const mm = require('mm');
 const rimraf = require('mz-modules/rimraf');
 const runscript = require('runscript');
 const mkdirp = require('mkdirp');
+const fs = require('mz/fs');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -111,4 +112,27 @@ describe('test/projj_import.test.js', () => {
       .end();
     });
   });
+
+  describe('when --cache', () => {
+    const cacheFile = path.join(home, '.projj/cache.json');
+
+    before(function* () {
+      yield fs.writeFile(cacheFile, JSON.stringify({ 'https://github.com/popomore/projj.git': {} }));
+    });
+    after(function* () {
+      yield rimraf(cacheFile);
+    });
+
+    it('should import from it', function* () {
+      yield coffee.fork(binfile, [ 'import', '--cache' ])
+      .debug()
+      .expect('stdout', /importing repository https:\/\/github.com\/popomore\/projj.git/)
+      .expect('stdout', new RegExp(`Cloning into ${target}`))
+      .expect('stdout', /preadd/)
+      .expect('stdout', /postadd/)
+      .expect('code', 0)
+      .end();
+    });
+  });
+
 });
