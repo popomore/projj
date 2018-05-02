@@ -1,4 +1,10 @@
 
+1.4.1 / 2018-05-02
+==================
+
+**fixes**
+  * [[`c1ce741`](http://github.com/popomore/projj/commit/c1ce741348c8e8d6f0815d424bb49e30e7c7a26f)] - fix: format git repo when load cache (#30) (Haoliang Gao <<sakura9515@gmail.com>>)
+
 1.4.0 / 2018-04-28
 ==================
 
