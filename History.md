@@ -1,4 +1,10 @@
 
+1.5.0 / 2018-12-14
+==================
+
+**features**
+  * [[`4cbe392`](http://github.com/popomore/projj/commit/4cbe39294823ca95fe15627e7e1b73a9b256b1b7)] - feat: add hints to the find command when input empty repo name (#33) (DiamondYuan <<541832074@qq.com>>)
+
 1.4.1 / 2018-05-02
 ==================
 
