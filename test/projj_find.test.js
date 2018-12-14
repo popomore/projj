@@ -15,6 +15,18 @@ describe('test/projj_find.test.js', () => {
   afterEach(mm.restore);
   afterEach(() => rimraf(tmp));
 
+
+  it('should to prompt if the input is empty', done => {
+    const home = path.join(fixtures, 'find');
+    mm(process.env, 'HOME', home);
+    coffee.fork(binfile, [ 'find', '' ])
+    .expect('stderr', new RegExp('Please specify the repo name:'))
+    .expect('stderr', new RegExp('For example: projj find example'))
+    .expect('code', 0)
+    .end(done);
+  });
+
+
   it('should find endsWith egg', done => {
     const home = path.join(fixtures, 'find');
     mm(process.env, 'HOME', home);
