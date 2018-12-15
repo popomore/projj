@@ -129,7 +129,7 @@ describe('test/projj_import.test.js', () => {
 
     it('should import from it', function* () {
       yield coffee.fork(binfile, [ 'import', '--cache' ])
-        .debug()
+        // .debug()
         .expect('stdout', /importing repository https:\/\/github.com\/popomore\/projj.git/)
         .expect('stdout', new RegExp(`Cloning into ${target}`))
         .expect('stdout', /preadd/)
