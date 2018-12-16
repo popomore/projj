@@ -21,6 +21,7 @@ describe('test/projj_find.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'find', 'egg' ])
     .beforeScript(mockDarwin)
+    .expect('stdout', new RegExp(`Change directory to ${home}/github.com/eggjs/egg`))
     .expect('stdout', new RegExp(`cd ${home}/github.com/eggjs/egg`))
     .expect('code', 0)
     .end(done);
@@ -32,7 +33,7 @@ describe('test/projj_find.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'find', 'egg' ])
     .beforeScript(mockNotDarwin)
-    .expect('stderr', new RegExp('Open only support in darwin'))
+    .expect('stderr', new RegExp('Change directory only supported in darwin'))
     .expect('stdout', new RegExp(`find repo egg's location: ${home}/github.com/eggjs/egg`))
     .expect('code', 0)
     .end(done);
