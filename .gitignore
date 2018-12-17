@@ -1,6 +1,7 @@
 /node_modules/
 coverage/
 cache.json
+.nyc_output/
 !test/fixtures/hook/.projj/cache.json
 !test/fixtures/find/.projj/cache.json
 !test/fixtures/find-change-directory/.projj/cache.json
