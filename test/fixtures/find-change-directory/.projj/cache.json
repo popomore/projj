@@ -1,0 +1,14 @@
+{
+  "github.com/eggjs/egg": {
+    "repo": "git@github.com:eggjs/egg.git"
+  },
+  "github.com/eggjs/egg-core": {
+    "repo": "git@github.com:eggjs/egg-core.git"
+  },
+  "gitlab.com/eggjs/egg-core": {
+    "repo": "git@gitlab.com:eggjs/egg-core.git"
+  },
+  "gitlab.com/eggjs/autod-egg": {
+    "repo": "git@gitlab.com:eggjs/autod-egg.git"
+  }
+}

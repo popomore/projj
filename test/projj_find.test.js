@@ -15,6 +15,29 @@ describe('test/projj_find.test.js', () => {
   afterEach(mm.restore);
   afterEach(() => rimraf(tmp));
 
+  it('should run script when changeDirectory is true and platform is darwin', done => {
+    const home = path.join(fixtures, 'find-change-directory');
+    const mockDarwin = path.join(home, 'mock_darwin.js');
+    mm(process.env, 'HOME', home);
+    coffee.fork(binfile, [ 'find', 'egg' ])
+    .beforeScript(mockDarwin)
+    .expect('stdout', new RegExp(`Change directory to ${home}/github.com/eggjs/egg`))
+    .expect('stdout', new RegExp(`cd ${home}/github.com/eggjs/egg`))
+    .expect('code', 0)
+    .end(done);
+  });
+
+  it('should show warn when changeDirectory is true and platform is not darwin', done => {
+    const home = path.join(fixtures, 'find-change-directory');
+    const mockNotDarwin = path.join(home, 'mock_not_darwin.js');
+    mm(process.env, 'HOME', home);
+    coffee.fork(binfile, [ 'find', 'egg' ])
+    .beforeScript(mockNotDarwin)
+    .expect('stderr', new RegExp('Change directory only supported in darwin'))
+    .expect('stdout', new RegExp(`find repo egg's location: ${home}/github.com/eggjs/egg`))
+    .expect('code', 0)
+    .end(done);
+  });
 
   it('should to prompt if the input is empty', done => {
     const home = path.join(fixtures, 'find');
