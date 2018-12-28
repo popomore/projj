@@ -1,4 +1,16 @@
 
+1.6.0 / 2018-12-28
+==================
+
+**features**
+  * [[`444dee9`](http://github.com/popomore/projj/commit/444dee99bc8341d817105bce2c135f7b3af7a6e0)] - feat: change dir when config change_directory true and platform is darwin (#34) (DiamondYuan <<541832074@qq.com>>)
+
+**fixes**
+  * [[`cbdd73d`](http://github.com/popomore/projj/commit/cbdd73d0890891bd9e4a42f092324720b8979672)] - fix: fix error when iterm is not installed (#35) (DiamondYuan <<541832074@qq.com>>)
+
+**others**
+  * [[`077bbda`](http://github.com/popomore/projj/commit/077bbda7775fc5d345884f735e958fb6d2cf8e7a)] - docs: add document for change_directory (#37) (Haoliang Gao <<sakura9515@gmail.com>>)
+
 1.5.0 / 2018-12-14
 ==================
 
