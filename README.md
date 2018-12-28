@@ -93,6 +93,8 @@ projj provide a easy way to find the location of your repositories.
 $ projj find [repo]
 ```
 
+You can set `change_directory` in `~/.projj/config.json` to change directory automatically.
+
 ### Sync
 
 `projj sync` will check the repository in cache.json whether exists, the repository will be removed from cache if not exist.
