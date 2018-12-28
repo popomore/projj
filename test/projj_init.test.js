@@ -22,9 +22,9 @@ describe('test/projj_init.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'init' ])
     // .debug()
-    .expect('stdout', new RegExp(`Set base directory: ${home}\n`))
-    .expect('code', 0)
-    .end(done);
+      .expect('stdout', new RegExp(`Set base directory: ${home}\n`))
+      .expect('code', 0)
+      .end(done);
   });
 
   it('should get base directory with tilde', done => {
@@ -32,35 +32,35 @@ describe('test/projj_init.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'init' ])
     // .debug()
-    .expect('stdout', new RegExp(`Set base directory: ${home}/code\n`))
-    .expect('code', 0)
-    .end(done);
+      .expect('stdout', new RegExp(`Set base directory: ${home}/code\n`))
+      .expect('code', 0)
+      .end(done);
   });
 
   it('should set base when config don\'t exist', done => {
     mm(process.env, 'HOME', tmp);
     coffee.fork(binfile, [ 'init' ])
     // .debug()
-    .expect('stdout', /Set base directory: /)
-    .expect('stdout', /Set base directory: \/home\n/)
-    .expect('code', 0)
-    .write('/home')
-    .end(err => {
-      assert.ifError(err);
-      assert(fs.existsSync(path.join(tmp, '.projj/config.json')));
-      const content = fs.readFileSync(path.join(tmp, '.projj/config.json'), 'utf8');
-      assert(content === '{\n  "base": "/home",\n  "hooks": {}\n}');
-      done();
-    });
+      .expect('stdout', /Set base directory: /)
+      .expect('stdout', /Set base directory: \/home\n/)
+      .expect('code', 0)
+      .write('/home')
+      .end(err => {
+        assert.ifError(err);
+        assert(fs.existsSync(path.join(tmp, '.projj/config.json')));
+        const content = fs.readFileSync(path.join(tmp, '.projj/config.json'), 'utf8');
+        assert(content === '{\n  "base": "/home",\n  "hooks": {}\n}');
+        done();
+      });
   });
 
   it('should set base with relative path', done => {
     mm(process.env, 'HOME', tmp);
     coffee.fork(binfile, [ 'init' ])
     // .debug()
-    .expect('stdout', new RegExp(`Set base directory: ${process.cwd()}/code\n`))
-    .expect('code', 0)
-    .write('code')
-    .end(done);
+      .expect('stdout', new RegExp(`Set base directory: ${process.cwd()}/code\n`))
+      .expect('code', 0)
+      .write('code')
+      .end(done);
   });
 });

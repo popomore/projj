@@ -27,31 +27,31 @@ describe('test/projj_runall.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'runall', 'noexist' ])
     // .debug()
-    .expect('stderr', /hook "noexist" don't exist/)
-    .expect('code', 1)
-    .end(done);
+      .expect('stderr', /hook "noexist" don't exist/)
+      .expect('code', 1)
+      .end(done);
   });
 
   it('should run hook in every repo', done => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'runall', 'custom' ])
     // .debug()
-    .expect('stdout', /Run hook custom for github.com\/popomore\/test1/)
-    .expect('stdout', /Run hook custom for github.com\/popomore\/test2/)
-    .expect('stdout', new RegExp(`get package name test1 from ${home}/github.com/popomore/test1`))
-    .expect('stdout', new RegExp(`get package name test2 from ${home}/github.com/popomore/test2`))
-    .expect('code', 0)
-    .end(done);
+      .expect('stdout', /Run hook custom for github.com\/popomore\/test1/)
+      .expect('stdout', /Run hook custom for github.com\/popomore\/test2/)
+      .expect('stdout', new RegExp(`get package name test1 from ${home}/github.com/popomore/test1`))
+      .expect('stdout', new RegExp(`get package name test2 from ${home}/github.com/popomore/test2`))
+      .expect('code', 0)
+      .end(done);
   });
 
   it('should run all hooks if one has error', done => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'runall', 'error' ])
     // .debug()
-    .expect('stdout', /Run hook error for github.com\/popomore\/test1/)
-    .expect('stdout', /Run hook error for github.com\/popomore\/test2/)
-    .expect('stderr', /Run "sh -c exit 1" error, exit code 1/)
-    .expect('code', 0)
-    .end(done);
+      .expect('stdout', /Run hook error for github.com\/popomore\/test1/)
+      .expect('stdout', /Run hook error for github.com\/popomore\/test2/)
+      .expect('stderr', /Run "sh -c exit 1" error, exit code 1/)
+      .expect('code', 0)
+      .end(done);
   });
 });

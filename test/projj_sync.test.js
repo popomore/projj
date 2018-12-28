@@ -27,9 +27,9 @@ describe('test/projj_sync.test.js', () => {
 
     yield coffee.fork(binfile, [ 'sync' ])
     // .debug()
-    .expect('stdout', /Remove github.com\/popomore\/projj that don't exist/)
-    .expect('code', 0)
-    .end();
+      .expect('stdout', /Remove github.com\/popomore\/projj that don't exist/)
+      .expect('code', 0)
+      .end();
   });
 
 });
