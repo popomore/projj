@@ -1,4 +1,10 @@
 
+1.7.0 / 2019-01-02
+==================
+
+**features**
+  * [[`1771ca5`](http://github.com/popomore/projj/commit/1771ca59300dba7a69108ef70e0f5dc957281c7d)] - feat: add should support change directory (#39) (TZ | 天猪 <<atian25@qq.com>>)
+
 1.6.0 / 2018-12-28
 ==================
 
