@@ -77,6 +77,39 @@ describe('test/projj_add.test.js', () => {
     .end(done);
   });
 
+  it('should run script when changeDirectory is true and platform is darwin', done => {
+    const home = path.join(fixtures, 'add-change-directory');
+    const repo = 'https://github.com/popomore/projj.git';
+    const target = path.join(tmp, 'github.com/popomore/projj');
+    mm(process.env, 'HOME', home);
+
+    coffee.fork(binfile, [ 'add', repo ])
+    .debug()
+    .beforeScript(path.join(__dirname, 'fixtures/mock_darwin.js'))
+    .expect('stdout', new RegExp(`Start adding repository ${repo}`))
+    .expect('stdout', new RegExp(`Cloning into ${target}`))
+    .expect('stdout', new RegExp(`Change directory to ${target}`))
+    .notExpect('stdout', /Copied to clipboard/)
+    .expect('code', 0)
+    .end(done);
+  });
+
+  it('should run script when changeDirectory is true and platform is not darwin', done => {
+    const home = path.join(fixtures, 'add-change-directory');
+    const repo = 'https://github.com/popomore/projj.git';
+    const target = path.join(tmp, 'github.com/popomore/projj');
+    mm(process.env, 'HOME', home);
+
+    coffee.fork(binfile, [ 'add', repo ])
+    .debug()
+    .beforeScript(path.join(__dirname, 'fixtures/mock_not_darwin.js'))
+    .expect('stdout', new RegExp(`Start adding repository ${repo}`))
+    .expect('stdout', new RegExp(`Cloning into ${target}`))
+    .expect('stdout', /Copied to clipboard/)
+    .expect('stderr', new RegExp('Change directory only supported in darwin'))
+    .expect('code', 0)
+    .end(done);
+  });
 });
 
 function mkdir(file) {
