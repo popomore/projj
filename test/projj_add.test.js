@@ -57,7 +57,7 @@ describe('test/projj_add.test.js', () => {
     mm(process.env, 'HOME', home);
 
     coffee.fork(binfile, [ 'add', repo ])
-    // .debug()
+    .debug()
     .expect('stdout', new RegExp('Start adding repository git@github.com:popomore/projj.git'))
     .expect('stdout', new RegExp(`Cloning into ${target}`))
     .expect('code', 0)
