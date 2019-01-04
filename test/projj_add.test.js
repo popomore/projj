@@ -16,6 +16,7 @@ const tmp = path.join(fixtures, 'tmp');
 describe('test/projj_add.test.js', () => {
 
   afterEach(mm.restore);
+  beforeEach(() => rimraf(tmp));
   afterEach(() => rimraf(tmp));
 
   it('should add a git repo', done => {
@@ -44,6 +45,29 @@ describe('test/projj_add.test.js', () => {
       assert(cache['github.com/popomore/projj'].repo === 'https://github.com/popomore/projj.git');
       assert(cache['github.com/popomore/test1'].repo === 'git@github.com:popomore/test1.git');
       assert(cache['github.com/popomore/test2'].repo === 'https://github.com/popomore/projj.git');
+      done();
+    });
+  });
+
+  it('should add a git repo with alias', done => {
+    const home = path.join(fixtures, 'base-tmp');
+    const cachePath = path.join(home, '.projj/cache.json');
+    const repo = 'github://popomore/projj';
+    const target = path.join(tmp, 'github.com/popomore/projj');
+    mm(process.env, 'HOME', home);
+
+    coffee.fork(binfile, [ 'add', repo ])
+    // .debug()
+    .expect('stdout', new RegExp('Start adding repository git@github.com:popomore/projj.git'))
+    .expect('stdout', new RegExp(`Cloning into ${target}`))
+    .expect('code', 0)
+    .end(err => {
+      assert.ifError(err);
+      assert(fs.existsSync(path.join(target, 'package.json')));
+
+      const cache = JSON.parse(fs.readFileSync(cachePath));
+      assert(cache['github.com/popomore/projj']);
+      assert(cache['github.com/popomore/projj'].repo === 'git@github.com:popomore/projj.git');
       done();
     });
   });
