@@ -50,7 +50,7 @@ describe('test/projj_add.test.js', () => {
   });
 
   it('should add a git repo with alias', done => {
-    const home = path.join(fixtures, 'base-tmp');
+    const home = path.join(fixtures, 'alias');
     const cachePath = path.join(home, '.projj/cache.json');
     const repo = 'github://popomore/projj';
     const target = path.join(tmp, 'github.com/popomore/projj');
