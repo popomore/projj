@@ -4,9 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const coffee = require('coffee');
 const mm = require('mm');
-const rimraf = require('mz-modules/rimraf');
+const { rimraf, mkdirp } = require('mz-modules');
 const assert = require('assert');
-const mkdirp = require('mkdirp');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -100,7 +99,7 @@ describe('test/projj_add.test.js', () => {
     const repo = 'https://github.com/popomore/projj.git';
     const target = path.join(tmp, 'github.com/popomore/projj');
     mm(process.env, 'HOME', home);
-    yield mkdir(target);
+    yield mkdirp(target);
 
     yield coffee.fork(binfile, [ 'add', repo ])
     // .debug()
@@ -158,11 +157,3 @@ describe('test/projj_add.test.js', () => {
     .end(done);
   });
 });
-
-function mkdir(file) {
-  return new Promise((resolve, reject) => {
-    mkdirp(file, err => {
-      err ? reject(err) : resolve();
-    });
-  });
-}
