@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const coffee = require('coffee');
 const mm = require('mm');
+const runscript = require('runscript');
 const { rimraf, mkdirp } = require('mz-modules');
 const assert = require('assert');
 
@@ -48,27 +49,30 @@ describe('test/projj_add.test.js', () => {
     });
   });
 
-  it('should add a git repo with ssh', done => {
+  it.only('should add a git repo with ssh', function* () {
     const home = path.join(fixtures, 'alias');
     const cachePath = path.join(home, '.projj/cache.json');
     const repo = 'git@github.com:popomore/projj.git';
     const target = path.join(tmp, 'github.com/popomore/projj');
     mm(process.env, 'HOME', home);
 
-    coffee.fork(binfile, [ 'add', repo ])
+    yield mkdirp(path.join(home, '.ssh'));
+    yield runscript(`ssh-keygen -F github.com >> ${home}/.ssh/known_hosts`);
+    console.log(fs.readFileSync(path.join(home, '.ssh/known_hosts'), 'utf-8'));
+
+    yield coffee.fork(binfile, [ 'add', repo ])
     .debug()
     .expect('stdout', new RegExp('Start adding repository git@github.com:popomore/projj.git'))
     .expect('stdout', new RegExp(`Cloning into ${target}`))
     .expect('code', 0)
-    .end(err => {
-      assert.ifError(err);
-      assert(fs.existsSync(path.join(target, 'package.json')));
+    .end();
 
-      const cache = JSON.parse(fs.readFileSync(cachePath));
-      assert(cache['github.com/popomore/projj']);
-      assert(cache['github.com/popomore/projj'].repo === 'git@github.com:popomore/projj.git');
-      done();
-    });
+
+    assert(fs.existsSync(path.join(target, 'package.json')));
+
+    const cache = JSON.parse(fs.readFileSync(cachePath));
+    assert(cache['github.com/popomore/projj']);
+    assert(cache['github.com/popomore/projj'].repo === 'git@github.com:popomore/projj.git');
   });
 
   it('should add a git repo with alias', done => {
