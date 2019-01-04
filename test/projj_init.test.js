@@ -49,7 +49,7 @@ describe('test/projj_init.test.js', () => {
       assert.ifError(err);
       assert(fs.existsSync(path.join(tmp, '.projj/config.json')));
       const content = fs.readFileSync(path.join(tmp, '.projj/config.json'), 'utf8');
-      assert(content === '{\n  "base": "/home",\n  "hooks": {}\n}');
+      assert(content === '{\n  \"base\": \"/home\",\n  \"hooks\": {},\n  \"alias\": {\n    \"github://\": \"git@github.com:\"\n  }\n}');
       done();
     });
   });
