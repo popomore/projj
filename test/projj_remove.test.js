@@ -23,7 +23,7 @@ describe('test/projj_remove.test.js', () => {
       'github.com/eggjs/egg-core': {},
       'github.com/eggjs/autod-egg': {},
       'gitlab.com/eggjs/egg': {},
-      'github.com/DiamondYuan/yuque-web-clipper': {},
+      'github.com/DiamondYuan/yuque': {},
     });
     yield runscript(`cp -r ${projects} ${tempProject}`);
     fs.writeFileSync(catchPath, content);
@@ -44,14 +44,17 @@ describe('test/projj_remove.test.js', () => {
   });
 
   it('if there are other files in the folder, the folder will not be deleted.', done => {
-    coffee.fork(binfile, [ 'remove', 'yuque-web-clipper' ])
-    .expect('stdout', new RegExp('Do you want to remove the repository github.com/DiamondYuan/yuque-web-clipper'))
+    coffee.fork(binfile, [ 'remove', 'yuque' ])
+    .debug()
+    .waitForPrompt()
+    .expect('stdout', new RegExp('Do you want to remove the repository github.com/DiamondYuan/yuque'))
     .expect('stdout', new RegExp('Removed repository cannot be restored!'))
-    .expect('stdout', new RegExp('Please type in the name of the repository to confirm. DiamondYuan/yuque-web-clipper'))
-    .write('DiamondYuan/yuque-web-clipper')
-    .expect('stdout', new RegExp('Successfully remove repository github.com/DiamondYuan/yuque-web-clipper'))
+    .expect('stdout', new RegExp('Please type in the name of the repository to confirm. DiamondYuan/yuque'))
+    .write('DiamondYuan/yuque\n')
+    .expect('stdout', new RegExp('Successfully remove repository github.com/DiamondYuan/yuque'))
     .expect('code', 0)
-    .end(() => {
+    .end(err => {
+      assert.ifError(err);
       assert(fs.existsSync(path.join(tempProject, 'github.com/DiamondYuan')));
       done();
     });
@@ -73,7 +76,6 @@ describe('test/projj_remove.test.js', () => {
     });
   });
 
-
   it('should update cache that do not exist', done => {
     coffee.fork(binfile, [ 'remove', 'autod-egg' ])
     .expect('stdout', new RegExp('Do you want to remove the repository github.com/eggjs/autod-egg'))
@@ -92,7 +94,6 @@ describe('test/projj_remove.test.js', () => {
 
   it('could retry if the input is incorrect', done => {
     coffee.fork(binfile, [ 'remove', 'autod-egg' ])
-    .debug()
     .waitForPrompt()
     .expect('stdout', new RegExp('Do you want to remove the repository github.com/eggjs/autod-egg'))
     .expect('stdout', new RegExp('Removed repository cannot be restored!'))
