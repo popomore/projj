@@ -45,7 +45,6 @@ describe('test/projj_remove.test.js', () => {
 
   it('if there are other files in the folder, the folder will not be deleted.', done => {
     coffee.fork(binfile, [ 'remove', 'yuque' ])
-    .debug()
     .waitForPrompt()
     .expect('stdout', new RegExp('Do you want to remove the repository github.com/DiamondYuan/yuque'))
     .expect('stdout', new RegExp('Removed repository cannot be restored!'))
@@ -67,7 +66,6 @@ describe('test/projj_remove.test.js', () => {
     .expect('stdout', new RegExp('Removed repository cannot be restored!'))
     .expect('stdout', new RegExp('Please type in the name of the repository to confirm. popomore/projj'))
     .write('popomore/projj')
-    .expect('stdout', new RegExp(`Successfully remove empty folder ${folder}`))
     .expect('code', 0)
     .end(err => {
       assert.ifError(err);
@@ -82,7 +80,6 @@ describe('test/projj_remove.test.js', () => {
     .expect('stdout', new RegExp('Removed repository cannot be restored!'))
     .expect('stdout', new RegExp('Please type in the name of the repository to confirm. eggjs/autod-egg'))
     .write('eggjs/autod-egg')
-    .expect('stdout', new RegExp('remove github.com/eggjs/autod-egg that don\'t exist'))
     .expect('code', 0)
     .end(err => {
       assert.ifError(err);
@@ -102,7 +99,6 @@ describe('test/projj_remove.test.js', () => {
     .expect('stdout', new RegExp('Do you want to continue'))
     .write('Y\n')
     .write('eggjs/autod-egg')
-    .expect('stdout', new RegExp('remove github.com/eggjs/autod-egg that don\'t exist'))
     .expect('code', 0)
     .end(done);
   });
