@@ -129,4 +129,11 @@ describe('test/projj_remove.test.js', () => {
     .expect('code', 0)
     .end(done);
   });
+
+  it('should find nothing with eggggg', done => {
+    coffee.fork(binfile, [ 'remove', 'eggggg' ])
+    .expect('stderr', new RegExp('Can not find repo eggggg'))
+    .expect('code', 0)
+    .end(done);
+  });
 });
