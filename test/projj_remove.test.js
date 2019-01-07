@@ -57,7 +57,7 @@ describe('test/projj_remove.test.js', () => {
     });
   });
 
-  it('if no other files are in the folder, the folder will not be deleted.', done => {
+  it('if no other files are in the folder, the folder will be deleted.', done => {
     const folder = path.join(tempProject, 'github.com/popomore');
     coffee.fork(binfile, [ 'remove', 'projj' ])
     .expect('stdout', new RegExp('Do you want to remove the repository github.com/popomore/projj'))
