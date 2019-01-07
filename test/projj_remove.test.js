@@ -121,7 +121,7 @@ describe('test/projj_remove.test.js', () => {
     .end(done);
   });
 
-  it('should find two matchs file with egg', done => {
+  it('should find two matching file with egg', done => {
     coffee.fork(binfile, [ 'remove', 'egg' ])
     .expect('stdout', new RegExp('Please select the correct repo'))
     .write('\n')
