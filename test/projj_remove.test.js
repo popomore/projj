@@ -26,7 +26,7 @@ describe('test/projj_remove.test.js', () => {
       'github.com/DiamondYuan/yuque': {},
     });
     yield runscript(`cp -r ${projects} ${tempProject}`);
-    fs.writeFileSync(catchPath, content);
+    yield fs.writeFile(catchPath, content);
   });
 
   afterEach(() => {
