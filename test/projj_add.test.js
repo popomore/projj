@@ -4,9 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const coffee = require('coffee');
 const mm = require('mm');
-const rimraf = require('mz-modules/rimraf');
+const { rimraf, mkdirp } = require('mz-modules');
 const assert = require('assert');
-const mkdirp = require('mkdirp');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -16,6 +15,7 @@ const tmp = path.join(fixtures, 'tmp');
 describe('test/projj_add.test.js', () => {
 
   afterEach(mm.restore);
+  beforeEach(() => rimraf(tmp));
   afterEach(() => rimraf(tmp));
 
   it('should add a git repo', done => {
@@ -48,12 +48,35 @@ describe('test/projj_add.test.js', () => {
     });
   });
 
+  it('should add a git repo with alias', done => {
+    const home = path.join(fixtures, 'alias');
+    const cachePath = path.join(home, '.projj/cache.json');
+    const repo = 'github://popomore/projj';
+    const target = path.join(tmp, 'github.com/popomore/projj');
+    mm(process.env, 'HOME', home);
+
+    coffee.fork(binfile, [ 'add', repo ])
+    // .debug()
+    .expect('stdout', new RegExp('Start adding repository https://github.com/popomore/projj.git'))
+    .expect('stdout', new RegExp(`Cloning into ${target}`))
+    .expect('code', 0)
+    .end(err => {
+      assert.ifError(err);
+      assert(fs.existsSync(path.join(target, 'package.json')));
+
+      const cache = JSON.parse(fs.readFileSync(cachePath));
+      assert(cache['github.com/popomore/projj']);
+      assert(cache['github.com/popomore/projj'].repo === 'https://github.com/popomore/projj.git');
+      done();
+    });
+  });
+
   it('should throw when target exists', function* () {
     const home = path.join(fixtures, 'base-tmp');
     const repo = 'https://github.com/popomore/projj.git';
     const target = path.join(tmp, 'github.com/popomore/projj');
     mm(process.env, 'HOME', home);
-    yield mkdir(target);
+    yield mkdirp(target);
 
     yield coffee.fork(binfile, [ 'add', repo ])
     // .debug()
@@ -84,7 +107,7 @@ describe('test/projj_add.test.js', () => {
     mm(process.env, 'HOME', home);
 
     coffee.fork(binfile, [ 'add', repo ])
-    .debug()
+    // .debug()
     .beforeScript(path.join(__dirname, 'fixtures/mock_darwin.js'))
     .expect('stdout', new RegExp(`Start adding repository ${repo}`))
     .expect('stdout', new RegExp(`Cloning into ${target}`))
@@ -101,7 +124,7 @@ describe('test/projj_add.test.js', () => {
     mm(process.env, 'HOME', home);
 
     coffee.fork(binfile, [ 'add', repo ])
-    .debug()
+    // .debug()
     .beforeScript(path.join(__dirname, 'fixtures/mock_not_darwin.js'))
     .expect('stdout', new RegExp(`Start adding repository ${repo}`))
     .expect('stdout', new RegExp(`Cloning into ${target}`))
@@ -111,11 +134,3 @@ describe('test/projj_add.test.js', () => {
     .end(done);
   });
 });
-
-function mkdir(file) {
-  return new Promise((resolve, reject) => {
-    mkdirp(file, err => {
-      err ? reject(err) : resolve();
-    });
-  });
-}

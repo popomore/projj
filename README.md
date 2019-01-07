@@ -79,6 +79,12 @@ $ projj add git@github.com:popomore/projj.git
 
 it's just like `git clone`, but the repository will be cached by projj. You can find all repositories in `~/.projj/cache.json`
 
+also support alias which could config at `alias` of `~/.projj/config.json`:
+
+```bash
+$ projj add github://popomore/projj
+```
+
 ### Importing
 
 If you have some repositories in `~/code`, projj can import by `projj import ~/code`.
