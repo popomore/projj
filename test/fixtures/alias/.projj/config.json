@@ -1,0 +1,6 @@
+{
+  "base": "../../tmp",
+  "alias": {
+    "github://": "https://github.com/"
+  }
+}

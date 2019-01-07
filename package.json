@@ -38,7 +38,7 @@
     "ci": "npm run lint && npm run cov"
   },
   "ci": {
-    "version": "6",
+    "version": "6, 8, 10",
     "license": {
       "fullname": "popomore"
     }
