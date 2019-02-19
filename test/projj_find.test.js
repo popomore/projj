@@ -78,7 +78,7 @@ describe('test/projj_find.test.js', () => {
     .end(done);
   });
 
-  it('should find tow matchs file with egg-core', done => {
+  it('should find two matching file with egg-core', done => {
     const home = path.join(fixtures, 'find');
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'find', 'egg-core' ])
