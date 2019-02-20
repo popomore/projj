@@ -1,6 +1,6 @@
 {
   "name": "projj",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Manage repository easily.",
   "dependencies": {
     "chalk": "^1.1.3",
@@ -14,7 +14,7 @@
     "runscript": "^1.2.1",
     "through2": "^2.0.3",
     "zlogger": "^1.1.0",
-    "mz-modules":"^1.0.0"
+    "mz-modules": "^1.0.0"
   },
   "devDependencies": {
     "autod": "^2.7.1",

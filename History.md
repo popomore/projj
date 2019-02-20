@@ -1,4 +1,11 @@
 
+1.8.0 / 2019-02-20
+==================
+
+**features**
+  * [[`76762aa`](http://github.com/popomore/projj/commit/76762aa2e44c6bf573fc3f58287b41d87bafea63)] - feat: support remove command (#40) (DiamondYuan <<541832074@qq.com>>)
+  * [[`b45883a`](http://github.com/popomore/projj/commit/b45883a8e4c2c143ca8a9704e2270299edc70289)] - feat: support alias (#42) (TZ | 天猪 <<atian25@qq.com>>)
+
 1.7.0 / 2019-01-02
 ==================
 
