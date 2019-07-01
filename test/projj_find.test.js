@@ -100,7 +100,7 @@ describe('test/projj_find.test.js', () => {
     .end(done);
   });
 
-  it('should support ignore_case', done => {
+  it('should support ignore_case with eggjs/egg', done => {
     const home = path.join(fixtures, 'find-ignore-case');
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'find', 'eggjs/egg' ])
@@ -109,11 +109,19 @@ describe('test/projj_find.test.js', () => {
     .end(done);
   });
 
+  it('should support ignore_case with eggjs', done => {
+    const home = path.join(fixtures, 'find-ignore-case');
+    mm(process.env, 'HOME', home);
+    coffee.fork(binfile, [ 'find', 'eggjs' ])
+    .expect('stdout', new RegExp(`find repo eggjs's location: ${home}/github.com/EGGJS/EGG`))
+    .expect('code', 0)
+    .end(done);
+  });
+
   it('should not ignore_case when config.ignore_case is not true', done => {
     const home = path.join(fixtures, 'find');
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'find', 'EGG' ])
-    .debug()
     .expect('stderr', new RegExp('Can not find repo EGG'))
     .expect('code', 0)
     .end(done);
