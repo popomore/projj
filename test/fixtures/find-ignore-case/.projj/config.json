@@ -1,0 +1,5 @@
+{
+  "base": "..",
+  "run_config": true,
+  "ignore_case": true
+}
