@@ -14,7 +14,7 @@ const projects = path.join(home, 'projects');
 const tempProject = path.join(home, 'temp');
 const catchPath = path.join(home, '.projj/cache.json');
 
-describe.only('test/projj_remove.test.js', () => {
+describe('test/projj_remove.test.js', () => {
   beforeEach(function* () {
     mm(process.env, 'HOME', home);
     const content = JSON.stringify({
