@@ -1,4 +1,16 @@
 
+2.0.0 / 2020-01-23
+==================
+
+**features**
+  * [[`d237eb8`](http://github.com/popomore/projj/commit/d237eb8bb617b12665d570530cd200723f32de33)] - feat: [BREAKING_CHANGE] support multiple base directory (#52) (Haoliang Gao <<sakura9515@gmail.com>>)
+
+**fixes**
+  * [[`e8b8fe4`](http://github.com/popomore/projj/commit/e8b8fe4ccb1064698c6da3cbf121942f1071bdb6)] - fix: update help infomation for sync (#51) (Haoliang Gao <<sakura9515@gmail.com>>)
+
+**others**
+  * [[`906bf04`](http://github.com/popomore/projj/commit/906bf04a68c5d26757bb3eb2a0e1ad67ae042b1b)] - deps: update dependencies (#53) (Haoliang Gao <<sakura9515@gmail.com>>)
+
 1.8.0 / 2019-02-20
 ==================
 

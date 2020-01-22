@@ -1,6 +1,6 @@
 {
   "name": "projj",
-  "version": "1.8.0",
+  "version": "2.0.0",
   "description": "Manage repository easily.",
   "dependencies": {
     "chalk": "^3.0.0",
@@ -8,12 +8,12 @@
     "common-bin": "^2.8.3",
     "giturl": "^1.0.1",
     "inquirer": "^7.0.3",
-    "mkdirp": "^0.5.1",
     "mz": "^2.7.0",
     "mz-modules": "^2.1.0",
     "ora": "^4.0.3",
     "runscript": "^1.4.0",
     "through2": "^3.0.1",
+    "utility": "^1.16.3",
     "zlogger": "^1.1.0"
   },
   "devDependencies": {
@@ -45,6 +45,10 @@
   "bin": {
     "projj": "bin/projj.js"
   },
+  "files": [
+    "bin",
+    "lib"
+  ],
   "repository": {
     "type": "git",
     "url": "git@github.com:popomore/projj.git"

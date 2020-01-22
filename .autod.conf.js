@@ -19,5 +19,8 @@ module.exports = {
     './test/fixtures',
     './dist',
   ],
+  semver: [
+    "zlogger@1",
+  ],
   registry: 'https://r.cnpmjs.org',
 };

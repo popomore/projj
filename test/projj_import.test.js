@@ -5,7 +5,7 @@ const coffee = require('coffee');
 const mm = require('mm');
 const rimraf = require('mz-modules/rimraf');
 const runscript = require('runscript');
-const mkdirp = require('mkdirp');
+const mkdirp = require('mz-modules/mkdirp');
 const fs = require('mz/fs');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
@@ -83,7 +83,7 @@ describe('test/projj_import.test.js', () => {
         cwd: repo,
       });
     });
-    before(done => mkdirp(target, done));
+    before(() => mkdirp(target));
 
     it('should ignore', function* () {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
