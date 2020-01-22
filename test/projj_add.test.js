@@ -132,4 +132,27 @@ describe('test/projj_add.test.js', () => {
     .expect('code', 0)
     .end(done);
   });
+
+  it('should add a git repo when multiple directory', function* () {
+    const home = path.join(fixtures, 'multiple-directory');
+    const repo = 'https://github.com/popomore/projj.git';
+    const target = path.join(home, 'a/github.com/popomore/projj');
+    mm(process.env, 'HOME', home);
+
+    yield coffee.fork(binfile, [ 'add', repo ])
+      // .debug()
+      .write('\n')
+      .expect('stdout', new RegExp(`Start adding repository ${repo}`))
+      .expect('stdout', new RegExp(`Cloning into ${target}`))
+      .expect('code', 0)
+      .end();
+
+    assert(fs.existsSync(path.join(target, 'package.json')));
+
+    const cachePath = path.join(home, '.projj/cache.json');
+    const cache = JSON.parse(fs.readFileSync(cachePath));
+    assert(cache[target].repo === 'https://github.com/popomore/projj.git');
+
+    yield rimraf(path.join(home, 'a'));
+  });
 });
