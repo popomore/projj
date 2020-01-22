@@ -11,7 +11,7 @@ const fixtures = path.join(__dirname, 'fixtures');
 const tmp = path.join(fixtures, 'tmp');
 
 
-describe('test/projj_sync.test.js', () => {
+describe.only('test/projj_sync.test.js', () => {
 
   afterEach(mm.restore);
   afterEach(() => rimraf(tmp));

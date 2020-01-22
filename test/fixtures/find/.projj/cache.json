@@ -11,5 +11,7 @@
   "/Users/popomore/projj/github.com/popomore/projj/test/fixtures/find/gitlab.com/eggjs/autod-egg": {
     "repo": "git@gitlab.com:eggjs/autod-egg.git"
   },
-  "version": "v1"
+  "version": {
+    "repo": "git@version:undefined/undefined.git"
+  }
 }
