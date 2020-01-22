@@ -11,7 +11,7 @@ const fixtures = path.join(__dirname, 'fixtures');
 const tmp = path.join(fixtures, 'tmp');
 
 
-describe.only('test/projj_sync.test.js', () => {
+describe('test/projj_sync.test.js', () => {
 
   afterEach(mm.restore);
   afterEach(() => rimraf(tmp));
@@ -21,13 +21,13 @@ describe.only('test/projj_sync.test.js', () => {
     mm(process.env, 'HOME', home);
 
     const content = JSON.stringify({
-      'github.com/popomore/projj': {},
+      [path.join(tmp, 'github.com/popomore/projj')]: {},
     });
     yield fs.writeFile(path.join(home, '.projj/cache.json'), content);
 
     yield coffee.fork(binfile, [ 'sync' ])
     // .debug()
-    .expect('stdout', /Remove github.com\/popomore\/projj that don't exist/)
+    .expect('stdout', new RegExp(`Remove ${tmp}/github.com/popomore/projj that don't exist`))
     .expect('code', 0)
     .end();
   });
