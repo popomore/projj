@@ -48,8 +48,8 @@ describe('test/projj_runall.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'runall', 'error' ])
     // .debug()
-    .expect('stdout', /Run hook error for github.com\/popomore\/test1/)
-    .expect('stdout', /Run hook error for github.com\/popomore\/test2/)
+    .expect('stdout', new RegExp(`Run hook error for ${home}/github.com/popomore/test1`))
+    .expect('stdout', new RegExp(`Run hook error for ${home}/github.com/popomore/test2`))
     .expect('stderr', /Run "sh -c exit 1" error, exit code 1/)
     .expect('code', 0)
     .end(done);
