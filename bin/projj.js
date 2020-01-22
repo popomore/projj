@@ -2,4 +2,5 @@
 
 'use strict';
 
-require('common-bin').run(require('../lib/program'));
+const Program = require('../lib/program');
+new Program().start();

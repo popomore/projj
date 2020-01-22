@@ -3,30 +3,30 @@
   "version": "1.8.0",
   "description": "Manage repository easily.",
   "dependencies": {
-    "chalk": "^1.1.3",
-    "clipboardy": "^0.1.2",
-    "common-bin": "^1.0.1",
-    "giturl": "^1.0.0",
-    "inquirer": "^3.0.5",
+    "chalk": "^3.0.0",
+    "clipboardy": "^2.1.0",
+    "common-bin": "^2.8.3",
+    "giturl": "^1.0.1",
+    "inquirer": "^7.0.3",
     "mkdirp": "^0.5.1",
-    "mz": "^2.6.0",
-    "ora": "^1.1.0",
-    "runscript": "^1.2.1",
-    "through2": "^2.0.3",
-    "zlogger": "^1.1.0",
-    "mz-modules": "^1.0.0"
+    "mz": "^2.7.0",
+    "mz-modules": "^2.1.0",
+    "ora": "^4.0.3",
+    "runscript": "^1.4.0",
+    "through2": "^3.0.1",
+    "zlogger": "^1.1.0"
   },
   "devDependencies": {
-    "autod": "^2.7.1",
-    "coffee": "^5.1.0",
-    "egg-bin": "^4.9.0",
-    "egg-ci": "^1.2.0",
-    "eslint": "^3.16.1",
-    "eslint-config-egg": "^3.2.0",
-    "mm": "^2.1.0"
+    "autod": "^3.1.0",
+    "coffee": "^5.2.2",
+    "egg-bin": "^4.14.1",
+    "egg-ci": "^1.13.1",
+    "eslint": "^6.8.0",
+    "eslint-config-egg": "^8.0.1",
+    "mm": "^2.5.0"
   },
   "engines": {
-    "node": ">=6.0.0"
+    "node": ">=10.0.0"
   },
   "scripts": {
     "autod": "autod",
@@ -37,7 +37,7 @@
     "ci": "npm run lint && npm run cov"
   },
   "ci": {
-    "version": "6, 8, 10",
+    "version": "10, 12",
     "license": {
       "fullname": "popomore"
     }

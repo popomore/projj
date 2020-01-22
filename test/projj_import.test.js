@@ -35,12 +35,12 @@ describe('test/projj_import.test.js', () => {
     it('should import from it', function* () {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
       // .debug()
-      .expect('stdout', /importing repository https:\/\/github.com\/popomore\/projj.git/)
-      .expect('stdout', new RegExp(`Cloning into ${target}`))
-      .expect('stdout', /preadd/)
-      .expect('stdout', /postadd/)
-      .expect('code', 0)
-      .end();
+        .expect('stdout', /importing repository https:\/\/github.com\/popomore\/projj.git/)
+        .expect('stdout', new RegExp(`Cloning into ${target}`))
+        .expect('stdout', /preadd/)
+        .expect('stdout', /postadd/)
+        .expect('code', 0)
+        .end();
     });
   });
 
@@ -54,10 +54,10 @@ describe('test/projj_import.test.js', () => {
     it('should fail to clone', function* () {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
       // .debug()
-      .expect('stdout', /importing repository https:\/\/unknown.com\/popomore\/projj.git/)
-      .expect('stderr', /Fail to clone https:\/\/unknown.com\/popomore\/projj.git/)
-      .expect('code', 0)
-      .end();
+        .expect('stdout', /importing repository https:\/\/unknown.com\/popomore\/projj.git/)
+        .expect('stderr', /Fail to clone https:\/\/unknown.com\/popomore\/projj.git/)
+        .expect('code', 0)
+        .end();
     });
   });
 
@@ -71,9 +71,9 @@ describe('test/projj_import.test.js', () => {
     it('should fail to clone', function* () {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
       // .debug()
-      .notExpect('stdout', /importing repository https:\/\/unknown.com\/popomore\/projj.git/)
-      .expect('code', 0)
-      .end();
+        .notExpect('stdout', /importing repository https:\/\/unknown.com\/popomore\/projj.git/)
+        .expect('code', 0)
+        .end();
     });
   });
 
@@ -88,10 +88,10 @@ describe('test/projj_import.test.js', () => {
     it('should ignore', function* () {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
       // .debug()
-      .expect('stdout', /importing repository https:\/\/github.com\/popomore\/projj.git/)
-      .expect('stderr', new RegExp(`${target} exists`))
-      .expect('code', 0)
-      .end();
+        .expect('stdout', /importing repository https:\/\/github.com\/popomore\/projj.git/)
+        .expect('stderr', new RegExp(`${target} exists`))
+        .expect('code', 0)
+        .end();
     });
   });
 
@@ -107,9 +107,9 @@ describe('test/projj_import.test.js', () => {
     it('should ignore', function* () {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
       // .debug()
-      .notExpect('stdout', /importing repository https:\/\/github.com\/popomore\/projj-hooks.git/)
-      .expect('code', 0)
-      .end();
+        .notExpect('stdout', /importing repository https:\/\/github.com\/popomore\/projj-hooks.git/)
+        .expect('code', 0)
+        .end();
     });
   });
 

@@ -20,9 +20,9 @@ describe('test/projj_run.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'run', 'noexist' ])
     // .debug()
-    .expect('stderr', /Hook "noexist" don't exist/)
-    .expect('code', 1)
-    .end(done);
+      .expect('stderr', /Hook "noexist" don't exist/)
+      .expect('code', 1)
+      .end(done);
   });
 
   it('should run hook in cwd', done => {
@@ -31,10 +31,10 @@ describe('test/projj_run.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'run', 'custom' ], { cwd })
     // .debug()
-    .expect('stdout', new RegExp(`Run hook custom for ${home}/github.com/popomore/test1`))
-    .expect('stdout', new RegExp(`get package name test1 from ${home}/github.com/popomore/test1`))
-    .expect('code', 0)
-    .end(done);
+      .expect('stdout', new RegExp(`Run hook custom for ${home}/github.com/popomore/test1`))
+      .expect('stdout', new RegExp(`get package name test1 from ${home}/github.com/popomore/test1`))
+      .expect('code', 0)
+      .end(done);
   });
 
   it('should using buildin hook when has same name', done => {
@@ -42,9 +42,9 @@ describe('test/projj_run.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'run', 'ls' ])
     // .debug()
-    .expect('stdout', /buildin ls/)
-    .expect('code', 0)
-    .end(done);
+      .expect('stdout', /buildin ls/)
+      .expect('code', 0)
+      .end(done);
   });
 
   it('should get hook config', done => {
@@ -52,9 +52,9 @@ describe('test/projj_run.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'run', 'run_config' ])
     // .debug()
-    .expect('stdout', /get config from env true/)
-    .expect('code', 0)
-    .end(done);
+      .expect('stdout', /get config from env true/)
+      .expect('code', 0)
+      .end(done);
   });
 
 });
