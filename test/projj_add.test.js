@@ -140,7 +140,7 @@ describe('test/projj_add.test.js', () => {
     mm(process.env, 'HOME', home);
 
     yield coffee.fork(binfile, [ 'add', repo ])
-      // .debug()
+      .debug()
       .write('\n')
       .expect('stdout', new RegExp(`Start adding repository ${repo}`))
       .expect('stdout', new RegExp(`Cloning into ${target}`))

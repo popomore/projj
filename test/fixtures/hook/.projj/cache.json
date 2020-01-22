@@ -1,9 +1,3 @@
 {
-  "/Users/popomore/projj/github.com/popomore/projj/test/fixtures/hook/github.com/popomore/test1": {
-    "repo": "git@:Users/popomore.git"
-  },
-  "/Users/popomore/projj/github.com/popomore/projj/test/fixtures/hook/github.com/popomore/test2": {
-    "repo": "git@:Users/popomore.git"
-  },
   "version": "v1"
 }
