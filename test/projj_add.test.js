@@ -141,7 +141,7 @@ describe('test/projj_add.test.js', () => {
 
     yield coffee.fork(binfile, [ 'add', repo ])
       .debug()
-      .waitForPrompt(true)
+      .waitForPrompt(false)
       .write('\n')
       .expect('code', 0)
       .expect('stdout', new RegExp(`Start adding repository ${repo}`))
