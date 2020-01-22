@@ -1,14 +1,15 @@
 {
-  "github.com/eggjs/egg": {
+  "/Users/popomore/projj/github.com/popomore/projj/test/fixtures/find-change-directory/github.com/eggjs/egg": {
     "repo": "git@github.com:eggjs/egg.git"
   },
-  "github.com/eggjs/egg-core": {
+  "/Users/popomore/projj/github.com/popomore/projj/test/fixtures/find-change-directory/github.com/eggjs/egg-core": {
     "repo": "git@github.com:eggjs/egg-core.git"
   },
-  "gitlab.com/eggjs/egg-core": {
+  "/Users/popomore/projj/github.com/popomore/projj/test/fixtures/find-change-directory/gitlab.com/eggjs/egg-core": {
     "repo": "git@gitlab.com:eggjs/egg-core.git"
   },
-  "gitlab.com/eggjs/autod-egg": {
+  "/Users/popomore/projj/github.com/popomore/projj/test/fixtures/find-change-directory/gitlab.com/eggjs/autod-egg": {
     "repo": "git@gitlab.com:eggjs/autod-egg.git"
-  }
+  },
+  "version": "v1"
 }

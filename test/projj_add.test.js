@@ -11,7 +11,6 @@ const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
 const tmp = path.join(fixtures, 'tmp');
 
-
 describe('test/projj_add.test.js', () => {
 
   afterEach(mm.restore);
@@ -40,10 +39,10 @@ describe('test/projj_add.test.js', () => {
       assert(fs.existsSync(path.join(target, 'package.json')));
 
       const cache = JSON.parse(fs.readFileSync(cachePath));
-      assert(cache['github.com/popomore/projj']);
-      assert(cache['github.com/popomore/projj'].repo === 'https://github.com/popomore/projj.git');
-      assert(cache['github.com/popomore/test1'].repo === 'git@github.com:popomore/test1.git');
-      assert(cache['github.com/popomore/test2'].repo === 'https://github.com/popomore/projj.git');
+      assert(cache[path.join(tmp, 'github.com/popomore/projj')]);
+      assert(cache[path.join(tmp, 'github.com/popomore/projj')].repo === 'https://github.com/popomore/projj.git');
+      assert(cache[path.join(tmp, 'github.com/popomore/test1')].repo === 'git@github.com:popomore/test1.git');
+      assert(cache[path.join(tmp, 'github.com/popomore/test2')].repo === 'https://github.com/popomore/projj.git');
       done();
     });
   });
@@ -65,8 +64,8 @@ describe('test/projj_add.test.js', () => {
       assert(fs.existsSync(path.join(target, 'package.json')));
 
       const cache = JSON.parse(fs.readFileSync(cachePath));
-      assert(cache['github.com/popomore/projj']);
-      assert(cache['github.com/popomore/projj'].repo === 'https://github.com/popomore/projj.git');
+      assert(cache[path.join(tmp, 'github.com/popomore/projj')]);
+      assert(cache[path.join(tmp, 'github.com/popomore/projj')].repo === 'https://github.com/popomore/projj.git');
       done();
     });
   });
