@@ -133,7 +133,7 @@ describe('test/projj_add.test.js', () => {
     .end(done);
   });
 
-  it('should add a git repo when multiple directory', function* () {
+  it.only('should add a git repo when multiple directory', function* () {
     const home = path.join(fixtures, 'multiple-directory');
     const repo = 'https://github.com/popomore/projj.git';
     const target = path.join(home, 'a/github.com/popomore/projj');
@@ -141,6 +141,7 @@ describe('test/projj_add.test.js', () => {
 
     yield coffee.fork(binfile, [ 'add', repo ])
       .debug()
+      .waitForPrompt(true)
       .write('\n')
       .expect('stdout', new RegExp(`Start adding repository ${repo}`))
       .expect('stdout', new RegExp(`Cloning into ${target}`))
