@@ -1,16 +1,16 @@
 'use strict';
 
-const fs = require('fs');
+const fs = require('mz/fs');
 const path = require('path');
 const coffee = require('coffee');
 const mm = require('mm');
 const rimraf = require('mz-modules/rimraf');
+const mkdirp = require('mz-modules/mkdirp');
 const assert = require('assert');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
 const tmp = path.join(fixtures, 'tmp');
-
 
 describe('test/projj_init.test.js', () => {
 
@@ -63,4 +63,33 @@ describe('test/projj_init.test.js', () => {
     .write('code')
     .end(done);
   });
+
+  it('should upgrade', function* () {
+    mm(process.env, 'HOME', tmp);
+    yield mkdirp(path.join(tmp, '.projj'));
+    yield fs.writeFile(path.join(tmp, '.projj/config.json'), `{"base":"${tmp}"}`);
+
+    yield coffee.fork(binfile, [ 'init' ])
+      .debug()
+      .expect('stderr', /Upgrade cache/)
+      .expect('code', 0)
+      .end();
+
+    const cache = yield fs.readFile(path.join(tmp, '.projj/cache.json'), 'utf8');
+    assert(JSON.parse(cache).version === 'v1');
+  });
+
+  it('should not upgrade', function* () {
+    mm(process.env, 'HOME', tmp);
+    yield mkdirp(path.join(tmp, '.projj'));
+    yield fs.writeFile(path.join(tmp, '.projj/config.json'), `{"base":"${tmp}"}`);
+    yield fs.writeFile(path.join(tmp, '.projj/cache.json'), '{"version":"v1"}');
+
+    yield coffee.fork(binfile, [ 'init' ])
+      .debug()
+      .notExpect('stderr', /Upgrade cache/)
+      .expect('code', 0)
+      .end();
+  });
+
 });
