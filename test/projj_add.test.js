@@ -11,7 +11,6 @@ const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
 const tmp = path.join(fixtures, 'tmp');
 
-
 describe('test/projj_add.test.js', () => {
 
   afterEach(mm.restore);
@@ -40,10 +39,10 @@ describe('test/projj_add.test.js', () => {
       assert(fs.existsSync(path.join(target, 'package.json')));
 
       const cache = JSON.parse(fs.readFileSync(cachePath));
-      assert(cache['github.com/popomore/projj']);
-      assert(cache['github.com/popomore/projj'].repo === 'https://github.com/popomore/projj.git');
-      assert(cache['github.com/popomore/test1'].repo === 'git@github.com:popomore/test1.git');
-      assert(cache['github.com/popomore/test2'].repo === 'https://github.com/popomore/projj.git');
+      assert(cache[path.join(tmp, 'github.com/popomore/projj')]);
+      assert(cache[path.join(tmp, 'github.com/popomore/projj')].repo === 'https://github.com/popomore/projj.git');
+      assert(cache[path.join(tmp, 'github.com/popomore/test1')].repo === 'git@github.com:popomore/test1.git');
+      assert(cache[path.join(tmp, 'github.com/popomore/test2')].repo === 'https://github.com/popomore/projj.git');
       done();
     });
   });
@@ -65,8 +64,8 @@ describe('test/projj_add.test.js', () => {
       assert(fs.existsSync(path.join(target, 'package.json')));
 
       const cache = JSON.parse(fs.readFileSync(cachePath));
-      assert(cache['github.com/popomore/projj']);
-      assert(cache['github.com/popomore/projj'].repo === 'https://github.com/popomore/projj.git');
+      assert(cache[path.join(tmp, 'github.com/popomore/projj')]);
+      assert(cache[path.join(tmp, 'github.com/popomore/projj')].repo === 'https://github.com/popomore/projj.git');
       done();
     });
   });
@@ -132,5 +131,29 @@ describe('test/projj_add.test.js', () => {
     .expect('stderr', new RegExp('Change directory only supported in darwin'))
     .expect('code', 0)
     .end(done);
+  });
+
+  it('should add a git repo when multiple directory', function* () {
+    const home = path.join(fixtures, 'multiple-directory');
+    const repo = 'https://github.com/popomore/projj.git';
+    const target = path.join(home, 'a/github.com/popomore/projj');
+    mm(process.env, 'HOME', home);
+
+    yield coffee.fork(binfile, [ 'add', repo ])
+      .debug()
+      .waitForPrompt(false)
+      .write('\n')
+      .expect('code', 0)
+      .expect('stdout', new RegExp(`Start adding repository ${repo}`))
+      .expect('stdout', new RegExp(`Cloning into ${target}`))
+      .end();
+
+    assert(fs.existsSync(path.join(target, 'package.json')));
+
+    const cachePath = path.join(home, '.projj/cache.json');
+    const cache = JSON.parse(fs.readFileSync(cachePath));
+    assert(cache[target].repo === 'https://github.com/popomore/projj.git');
+
+    yield rimraf(path.join(home, 'a'));
   });
 });

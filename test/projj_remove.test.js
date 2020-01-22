@@ -34,7 +34,6 @@ describe('test/projj_remove.test.js', () => {
     afterEach(() => rimraf(catchPath));
   });
 
-
   it('should to prompt if the input is empty', done => {
     coffee.fork(binfile, [ 'remove', '' ])
     .expect('stderr', new RegExp('Please specify the repo name:'))
@@ -46,11 +45,11 @@ describe('test/projj_remove.test.js', () => {
   it('if there are other files in the folder, the folder will not be deleted.', done => {
     coffee.fork(binfile, [ 'remove', 'yuque' ])
     .waitForPrompt()
-    .expect('stdout', new RegExp('Do you want to remove the repository github.com/DiamondYuan/yuque'))
+    .expect('stdout', new RegExp(`Do you want to remove the repository ${tempProject}/github.com/DiamondYuan/yuque`))
     .expect('stdout', new RegExp('Removed repository cannot be restored!'))
     .expect('stdout', new RegExp('Please type in the name of the repository to confirm. DiamondYuan/yuque'))
     .write('DiamondYuan/yuque\n')
-    .expect('stdout', new RegExp('Successfully remove repository github.com/DiamondYuan/yuque'))
+    .expect('stdout', new RegExp(`Successfully remove repository ${tempProject}/github.com/DiamondYuan/yuque`))
     .expect('code', 0)
     .end(err => {
       assert.ifError(err);
@@ -62,7 +61,7 @@ describe('test/projj_remove.test.js', () => {
   it('if no other files are in the folder, the folder will be deleted.', done => {
     const folder = path.join(tempProject, 'github.com/popomore');
     coffee.fork(binfile, [ 'remove', 'projj' ])
-    .expect('stdout', new RegExp('Do you want to remove the repository github.com/popomore/projj'))
+    .expect('stdout', new RegExp(`Do you want to remove the repository ${tempProject}/github.com/popomore/projj`))
     .expect('stdout', new RegExp('Removed repository cannot be restored!'))
     .expect('stdout', new RegExp('Please type in the name of the repository to confirm. popomore/projj'))
     .write('popomore/projj')
@@ -76,7 +75,7 @@ describe('test/projj_remove.test.js', () => {
 
   it('should update cache that do not exist', done => {
     coffee.fork(binfile, [ 'remove', 'autod-egg' ])
-    .expect('stdout', new RegExp('Do you want to remove the repository github.com/eggjs/autod-egg'))
+    .expect('stdout', new RegExp(`Do you want to remove the repository ${tempProject}/github.com/eggjs/autod-egg`))
     .expect('stdout', new RegExp('Removed repository cannot be restored!'))
     .expect('stdout', new RegExp('Please type in the name of the repository to confirm. eggjs/autod-egg'))
     .write('eggjs/autod-egg')
@@ -92,7 +91,7 @@ describe('test/projj_remove.test.js', () => {
   it('could retry if the input is incorrect', done => {
     coffee.fork(binfile, [ 'remove', 'autod-egg' ])
     .waitForPrompt()
-    .expect('stdout', new RegExp('Do you want to remove the repository github.com/eggjs/autod-egg'))
+    .expect('stdout', new RegExp(`Do you want to remove the repository ${tempProject}/github.com/eggjs/autod-egg`))
     .expect('stdout', new RegExp('Removed repository cannot be restored!'))
     .expect('stdout', new RegExp('Please type in the name of the repository to confirm. eggjs/autod-egg'))
     .write('eggjs/egg\n')
@@ -105,14 +104,15 @@ describe('test/projj_remove.test.js', () => {
 
   it('could cancel if the input is incorrect', done => {
     coffee.fork(binfile, [ 'remove', 'autod-egg' ])
+    // .debug()
     .waitForPrompt()
-    .expect('stdout', new RegExp('Do you want to remove the repository github.com/eggjs/autod-egg'))
+    .expect('stdout', new RegExp(`Do you want to remove the repository ${tempProject}/github.com/eggjs/autod-egg`))
     .expect('stdout', new RegExp('Removed repository cannot be restored!'))
     .expect('stdout', new RegExp('Please type in the name of the repository to confirm. eggjs/autod-egg'))
     .write('eggjs/egg\n')
     .expect('stdout', new RegExp('Do you want to continue'))
     .write('\n')
-    .expect('stdout', new RegExp('Cancel remove repository {2}github.com/eggjs/autod-egg'))
+    .expect('stdout', new RegExp(`Cancel remove repository ${tempProject}/github.com/eggjs/autod-egg`))
     .expect('code', 0)
     .end(done);
   });
@@ -121,7 +121,7 @@ describe('test/projj_remove.test.js', () => {
     coffee.fork(binfile, [ 'remove', 'egg' ])
     .expect('stdout', new RegExp('Please select the correct repo'))
     .write('\n')
-    .expect('stdout', new RegExp('Do you want to remove the repository github.com/eggjs/egg'))
+    .expect('stdout', new RegExp(`Do you want to remove the repository ${tempProject}/github.com/eggjs/egg`))
     .expect('code', 0)
     .end(done);
   });
