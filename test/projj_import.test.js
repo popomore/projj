@@ -118,7 +118,7 @@ describe('test/projj_import.test.js', () => {
 
     before(function* () {
       yield fs.writeFile(cacheFile, JSON.stringify({
-        'github.com/popomore/projj': {
+        [path.join(tmp, 'github.com/popomore/projj')]: {
           repo: 'https://github.com/popomore/projj.git',
         },
       }));
