@@ -70,7 +70,7 @@ describe('test/projj_init.test.js', () => {
     yield fs.writeFile(path.join(tmp, '.projj/config.json'), `{"base":"${tmp}"}`);
 
     yield coffee.fork(binfile, [ 'init' ])
-      .debug()
+      // .debug()
       .expect('stderr', /Upgrade cache/)
       .expect('code', 0)
       .end();
@@ -90,6 +90,9 @@ describe('test/projj_init.test.js', () => {
       .notExpect('stderr', /Upgrade cache/)
       .expect('code', 0)
       .end();
+
+    const cache = yield fs.readFile(path.join(tmp, '.projj/cache.json'), 'utf8');
+    assert(JSON.parse(cache).version === 'v1');
   });
 
 });
