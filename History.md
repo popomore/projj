@@ -1,4 +1,10 @@
 
+2.1.0 / 2021-01-28
+==================
+
+**fixes**
+  * [[`5f2ba4a`](http://github.com/popomore/projj/commit/5f2ba4a589dd56ac1cbb2e66cb4ec30837f913f1)] - fix: redirect to find when add exists (#56) (tangyao <<tangyao@alibaba-inc.com>>)
+
 2.0.0 / 2020-01-23
 ==================
 
