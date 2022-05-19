@@ -7,7 +7,7 @@
     "clipboardy": "^2.1.0",
     "common-bin": "^2.8.3",
     "giturl": "^1.0.1",
-    "inquirer": "^7.0.3",
+    "inquirer": "^8.2.4",
     "mz": "^2.7.0",
     "mz-modules": "^2.1.0",
     "ora": "^4.0.3",

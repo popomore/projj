@@ -5,3 +5,4 @@ cache.json
 !test/fixtures/hook/.projj/cache.json
 !test/fixtures/multiple-directory/.projj/cache.json
 .github/
+.DS_Store
