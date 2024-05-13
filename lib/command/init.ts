@@ -1,17 +1,14 @@
-'use strict';
-
-const BaseCommand = require('../base_command');
+import BaseCommand from '../base_command';
 
 class InitCommand extends BaseCommand {
-  async _run() {
+  async _run(): Promise<void> {
     console.log(this.config);
     this.logger.info('Set base directory: %s', this.config.base.join(','));
   }
 
-  get description() {
+  get description(): string {
     return 'Initialize configuration';
   }
-
 }
 
-module.exports = InitCommand;
+export default InitCommand;

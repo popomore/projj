@@ -1,10 +1,8 @@
-'use strict';
-
-const BaseCommand = require('../base_command');
+import BaseCommand from '../base_command';
 
 class RunCommand extends BaseCommand {
 
-  async _run(cwd, [ hookName ]) {
+  async _run(cwd: string, [ hookName ]: string[]): Promise<void> {
     if (!hookName || !this.config.hooks[hookName]) {
       throw new Error(`hook "${hookName}" don't exist`);
     }
@@ -19,9 +17,9 @@ class RunCommand extends BaseCommand {
     }
   }
 
-  get description() {
+  get description(): string {
     return 'Run hook in every repository';
   }
 }
 
-module.exports = RunCommand;
+export default RunCommand;

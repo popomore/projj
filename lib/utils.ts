@@ -1,6 +1,4 @@
-'use strict';
-
-exports.generateAppleScript = dir => {
+export const generateAppleScript = (dir: string): string => {
   const terminalCommand = `tell application "Terminal"
     do script "cd ${dir}"  in front window
   end tell`.split('\n').map(line => (` -e '${line.trim()}'`)).join('');

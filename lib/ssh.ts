@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 
-'use strict';
+import { spawn } from 'child_process';
 
-const spawn = require('child_process').spawn;
-
-const args = [
+const args: string[] = [
   '-o', 'StrictHostKeyChecking=no',
 ].concat(process.argv.slice(2));
 const opt = {
