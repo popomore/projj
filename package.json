@@ -23,7 +23,11 @@
     "egg-ci": "^1.13.1",
     "eslint": "^6.8.0",
     "eslint-config-egg": "^8.0.1",
-    "mm": "^2.5.0"
+    "mm": "^2.5.0",
+    "typescript": "^4.0.0",
+    "@types/node": "^14.0.0",
+    "@types/mz": "^2.7.0",
+    "@types/inquirer": "^7.0.0"
   },
   "engines": {
     "node": ">=10.0.0"
@@ -34,7 +38,8 @@
     "test": "npm run lint -- --fix && npm run test-local",
     "test-local": "egg-bin test",
     "cov": "egg-bin cov",
-    "ci": "npm run lint && npm run cov"
+    "ci": "npm run lint && npm run cov",
+    "build": "tsc"
   },
   "ci": {
     "version": "10, 12",

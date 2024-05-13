@@ -1,19 +1,29 @@
-'use strict';
+import * as assert from 'assert';
+import * as fs from 'mz/fs';
+import { readJSON } from 'utility';
 
-const assert = require('assert');
-const fs = require('mz/fs');
-const readJSON = require('utility').readJSON;
+interface CacheOptions {
+  cachePath: string;
+}
 
-module.exports = class Cache {
-  constructor(options) {
+interface CacheContent {
+  [key: string]: any;
+  version?: string;
+}
+
+export default class Cache {
+  private cachePath: string;
+  private cache?: CacheContent;
+
+  constructor(options: CacheOptions) {
     assert(options && options.cachePath, 'cachePath is required');
     this.cachePath = options.cachePath;
   }
 
-  async get(key) {
+  async get(key?: string): Promise<any> {
     if (!this.cache) {
       if (await fs.exists(this.cachePath)) {
-        this.cache = await readJSON(this.cachePath);
+        this.cache = await readJSON(this.cachePath) as CacheContent;
         await this.setRepo(this.cache);
       } else {
         this.cache = {};
@@ -23,30 +33,30 @@ module.exports = class Cache {
     return key ? this.cache[key] : this.cache;
   }
 
-  async getKeys() {
+  async getKeys(): Promise<string[]> {
     const cache = await this.get();
     return Object.keys(cache).filter(key => key !== 'version');
   }
 
-  async set(key, value) {
+  async set(key: string, value?: any): Promise<void> {
     if (!key) return;
     if (!this.cache) await this.get();
 
     this.cache[key] = value || {};
   }
 
-  async remove(keys) {
+  async remove(keys: string | string[]): Promise<void> {
     if (!keys) return;
     if (!Array.isArray(keys)) keys = [ keys ];
     keys.forEach(key => delete this.cache[key]);
   }
 
-  async dump() {
+  async dump(): Promise<void> {
     if (!this.cache) return;
     await fs.writeFile(this.cachePath, JSON.stringify(this.cache, null, 2));
   }
 
-  async setRepo(cache) {
+  private async setRepo(cache: CacheContent): Promise<void> {
     const keys = await this.getKeys();
     for (const key of keys) {
       if (cache[key] && cache[key].repo) continue;
@@ -57,7 +67,7 @@ module.exports = class Cache {
     await this.dump();
   }
 
-  async upgrade() {
+  async upgrade(): Promise<void> {
     const cache = await this.get();
     switch (cache.version) {
       // v1 don't upgrade
@@ -71,5 +81,4 @@ module.exports = class Cache {
 
     await this.dump();
   }
-
-};
+}

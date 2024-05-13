@@ -1,28 +1,31 @@
-'use strict';
+import * as inquirer from 'inquirer';
+import * as path from 'path';
+import * as fs from 'mz/fs';
+import * as mkdirp from 'mz-modules/mkdirp';
+import BaseCommand from 'common-bin';
+import ConsoleLogger from 'zlogger';
+import * as chalk from 'chalk';
+import * as runscript from 'runscript';
+import * as through from 'through2';
+import * as giturl from 'giturl';
+import { readJSON } from 'utility';
+import Cache from './cache';
 
-const inquirer = require('inquirer');
-const path = require('path');
-const fs = require('mz/fs');
-const mkdirp = require('mz-modules/mkdirp');
-const BaseCommand = require('common-bin');
-const ConsoleLogger = require('zlogger');
-const chalk = require('chalk');
-const runscript = require('runscript');
-const through = require('through2');
-const giturl = require('giturl');
-const readJSON = require('utility').readJSON;
-const Cache = require('./cache');
-const PROMPT = Symbol('prompt');
+interface Config {
+  base: string[];
+  hooks: { [key: string]: string };
+  alias: { [key: string]: string };
+}
 
-const configDir = path.join(process.env.HOME, '.projj');
+const configDir = path.join(process.env.HOME as string, '.projj');
 const configPath = path.join(configDir, 'config.json');
 const cachePath = path.join(configDir, 'cache.json');
 const consoleLogger = new ConsoleLogger({
   time: false,
 });
 
-const defaults = {
-  base: `${process.env.HOME}/projj`,
+const defaults: Config = {
+  base: [`${process.env.HOME}/projj`],
   hooks: {},
   alias: {
     'github://': 'https://github.com/',
@@ -30,8 +33,13 @@ const defaults = {
 };
 
 class Command extends BaseCommand {
+  protected logger: ConsoleLogger;
+  protected childLogger: ConsoleLogger;
+  protected cache: Cache;
+  protected config: Config;
+  private PROMPT: any;
 
-  constructor(rawArgv) {
+  constructor(rawArgv: string[]) {
     super(rawArgv);
     this.logger = new ConsoleLogger({
       prefix: chalk.green('✔︎  '),
@@ -46,19 +54,18 @@ class Command extends BaseCommand {
     this.cache = new Cache({ cachePath });
   }
 
-  async run({ cwd, rawArgv }) {
+  async run({ cwd, rawArgv }: { cwd: string; rawArgv: string[] }): Promise<void> {
     try {
       await this.init();
       await this._run(cwd, rawArgv);
       consoleLogger.info('✨  Done');
     } catch (err) {
       this.error(err.message);
-      // this.logger.error(err.stack);
       process.exit(1);
     }
   }
 
-  async init() {
+  async init(): Promise<void> {
     await this.loadConfig();
 
     const cache = await this.cache.get();
@@ -70,7 +77,7 @@ class Command extends BaseCommand {
       for (const key of keys) {
         if (path.isAbsolute(key)) continue;
         const value = cache[key];
-        await this.cache.remove([ key ]);
+        await this.cache.remove([key]);
         await this.cache.set(path.join(baseDir, key), value);
       }
 
@@ -78,14 +85,13 @@ class Command extends BaseCommand {
     }
   }
 
-  async loadConfig() {
+  async loadConfig(): Promise<void> {
     await mkdirp(configDir);
     const configExists = await fs.exists(configPath);
-    let config;
+    let config: Config;
     if (configExists) {
-      config = await readJSON(configPath);
+      config = await readJSON(configPath) as Config;
       config = resolveConfig(config, defaults);
-      // ignore when base has been defined in ~/.projj/config
       if (config.base) {
         this.config = config;
         return;
@@ -98,12 +104,12 @@ class Command extends BaseCommand {
       message: 'Set base directory:',
       default: defaults.base,
     };
-    const { base } = await this.prompt([ question ]);
+    const { base } = await this.prompt([question]);
     this.config = resolveConfig({ base }, defaults);
     await fs.writeFile(configPath, JSON.stringify(this.config, null, 2));
   }
 
-  async runHook(name, cacheKey) {
+  async runHook(name: string, cacheKey: string): Promise<void> {
     if (!this.config.hooks[name]) return;
     const hook = this.config.hooks[name];
     const env = {
@@ -124,16 +130,13 @@ class Command extends BaseCommand {
     await this.runScript(hook, opt);
   }
 
-  async prompt(questions) {
-    if (!this[PROMPT]) {
-      // create a self contained inquirer module.
-      this[PROMPT] = inquirer.createPromptModule();
-      const promptMapping = this[PROMPT].prompts;
+  async prompt(questions: inquirer.QuestionCollection<any>): Promise<inquirer.Answers> {
+    if (!this.PROMPT) {
+      this.PROMPT = inquirer.createPromptModule();
+      const promptMapping = this.PROMPT.prompts;
       for (const key of Object.keys(promptMapping)) {
         const Clz = promptMapping[key];
-        // extend origin prompt instance to emit event
         promptMapping[key] = class CustomPrompt extends Clz {
-          /* istanbul ignore next */
           static get name() { return Clz.name; }
           run() {
             process.send && process.send({ type: 'prompt', name: this.opt.name });
@@ -143,10 +146,10 @@ class Command extends BaseCommand {
         };
       }
     }
-    return this[PROMPT](questions);
+    return this.PROMPT(questions);
   }
 
-  async runScript(cmd, opt) {
+  async runScript(cmd: string, opt: any): Promise<void> {
     const stdout = through();
     stdout.pipe(this.childLogger.stdout, { end: false });
     opt = Object.assign({}, {
@@ -164,19 +167,16 @@ class Command extends BaseCommand {
     }
   }
 
-  error(msg) {
+  error(msg: string): void {
     consoleLogger.error(chalk.red('✘  ' + msg));
   }
 
-  // https://github.com/popomore/projj.git
-  // => $BASE/github.com/popomore/projj
-  url2dir(url) {
+  url2dir(url: string): string {
     url = giturl.parse(url);
     return url.replace(/https?:\/\//, '');
   }
 
-  async addRepo(repo, cacheKey) {
-    // preadd hook
+  async addRepo(repo: string, cacheKey: string): Promise<void> {
     await this.runHook('preadd', cacheKey);
 
     const targetPath = cacheKey;
@@ -188,15 +188,13 @@ class Command extends BaseCommand {
     await this.runScript(`git clone ${repo} ${targetPath} > /dev/null`, {
       env,
     });
-    // add this repository to cache.json
     await this.cache.set(cacheKey, { repo });
     await this.cache.dump();
 
-    // preadd hook
     await this.runHook('postadd', cacheKey);
   }
 
-  async chooseBaseDirectory() {
+  async chooseBaseDirectory(): Promise<string> {
     const baseDirectories = this.config.base;
     if (baseDirectories.length === 1) return baseDirectories[0];
 
@@ -206,24 +204,22 @@ class Command extends BaseCommand {
       message: 'Choose base directory',
       choices: baseDirectories,
     };
-    const { base } = await this.prompt([ question ]);
+    const { base } = await this.prompt([question]);
     return base;
   }
 }
 
-module.exports = Command;
-
-function resolveConfig(config, defaults) {
+function resolveConfig(config: Partial<Config>, defaults: Config): Config {
   config = Object.assign({}, defaults, config);
   if (!Array.isArray(config.base)) {
-    config.base = [ config.base ];
+    config.base = [config.base];
   }
   config.base = config.base.map(baseDir => {
     switch (baseDir[0]) {
       case '.':
         return path.join(path.dirname(configPath), baseDir);
       case '~':
-        return baseDir.replace('~', process.env.HOME);
+        return baseDir.replace('~', process.env.HOME as string);
       case '/':
         return baseDir;
       default:
@@ -231,10 +227,10 @@ function resolveConfig(config, defaults) {
     }
   });
 
-  return config;
+  return config as Config;
 }
 
-function colorStream(stream) {
+function colorStream(stream: NodeJS.WritableStream): NodeJS.WritableStream {
   const s = through(function(buf, _, done) {
     done(null, chalk.gray(buf.toString()));
   });

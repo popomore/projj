@@ -1,13 +1,15 @@
-'use strict';
+import chalk from 'chalk';
+import clipboardy from 'clipboardy';
+import utils from '../utils';
+import BaseCommand from '../base_command';
 
-const chalk = require('chalk');
-const clipboardy = require('clipboardy');
-const utils = require('../utils');
-const BaseCommand = require('../base_command');
+interface IChooseResult {
+  key: string;
+}
 
 class FindCommand extends BaseCommand {
 
-  async _run(cwd, [ repo ]) {
+  async _run(cwd: string, [ repo ]: string[]): Promise<void> {
     if (!repo) {
       this.logger.error('Please specify the repo name:');
       this.childLogger.error(chalk.white('For example:'), chalk.green('projj find', chalk.yellow('example')));
@@ -21,11 +23,11 @@ class FindCommand extends BaseCommand {
       this.logger.error('Can not find repo %s', chalk.yellow(repo));
       return;
     }
-    let key;
+    let key: string;
     if (matched.length === 1) {
       key = matched[0];
     } else {
-      const res = await this.choose(matched);
+      const res: IChooseResult = await this.choose(matched);
       key = res.key;
     }
     const dir = key;
@@ -42,7 +44,7 @@ class FindCommand extends BaseCommand {
     await this.copyPath(repo, dir);
   }
 
-  async choose(choices) {
+  async choose(choices: string[]): Promise<IChooseResult> {
     return await this.prompt({
       name: 'key',
       type: 'list',
@@ -51,7 +53,7 @@ class FindCommand extends BaseCommand {
     });
   }
 
-  async copyPath(repo, dir) {
+  async copyPath(repo: string, dir: string): Promise<void> {
     try {
       this.logger.info('find repo %s\'s location: %s', repo, dir);
       await clipboardy.write(`cd ${dir}`);
@@ -61,10 +63,10 @@ class FindCommand extends BaseCommand {
     }
   }
 
-  get description() {
+  get description(): string {
     return 'Find repository';
   }
 
 }
 
-module.exports = FindCommand;
+export default FindCommand;

@@ -1,14 +1,17 @@
-'use strict';
+import * as path from 'path';
+import * as chalk from 'chalk';
+import BaseCommand from '../base_command';
+import * as fs from 'mz/fs';
+import * as rimraf from 'mz-modules/rimraf';
+import { prompt } from 'inquirer';
 
-const path = require('path');
-const chalk = require('chalk');
-const BaseCommand = require('../base_command');
-const fs = require('mz/fs');
-const rimraf = require('mz-modules/rimraf');
+interface IChooseResult {
+  key: string;
+}
 
 class RemoveCommand extends BaseCommand {
 
-  async _run(cwd, [ repo ]) {
+  async _run(cwd: string, [repo]: string[]): Promise<void> {
     if (!repo) {
       this.logger.error('Please specify the repo name:');
       this.childLogger.error(chalk.white('For example:'), chalk.green('projj remove', chalk.yellow('example')));
@@ -21,11 +24,11 @@ class RemoveCommand extends BaseCommand {
       this.logger.error('Can not find repo %s', chalk.yellow(repo));
       return;
     }
-    let key;
+    let key: string;
     if (matched.length === 1) {
       key = matched[0];
     } else {
-      const res = await this.choose(matched);
+      const res: IChooseResult = await this.choose(matched);
       key = res.key;
     }
     this.logger.info('Do you want to remove the repository', chalk.green(key));
@@ -47,16 +50,15 @@ class RemoveCommand extends BaseCommand {
     }
   }
 
-
-  async confirm(repoName) {
-    const res = await this.prompt({
+  async confirm(repoName: string): Promise<boolean> {
+    const res = await prompt({
       message: `Please type in the name of the repository to confirm. ${chalk.green(repoName)} \n`,
       name: 'userInput',
     });
     if (res.userInput === repoName) {
       return true;
     }
-    const continueRes = await this.prompt({
+    const continueRes = await prompt({
       type: 'confirm',
       message: 'Do you want to continue?',
       name: 'continueToEnter',
@@ -68,9 +70,8 @@ class RemoveCommand extends BaseCommand {
     return false;
   }
 
-
-  async choose(choices) {
-    return await this.prompt({
+  async choose(choices: string[]): Promise<IChooseResult> {
+    return await prompt({
       name: 'key',
       type: 'list',
       message: 'Please select the correct repo',
@@ -78,10 +79,9 @@ class RemoveCommand extends BaseCommand {
     });
   }
 
-  get description() {
+  get description(): string {
     return 'Remove repository';
   }
-
 }
 
-module.exports = RemoveCommand;
+export default RemoveCommand;

@@ -1,10 +1,8 @@
-'use strict';
-
-const path = require('path');
-const Command = require('common-bin');
+import * as path from 'path';
+import Command from 'common-bin';
 
 class Program extends Command {
-  constructor(rawArgv) {
+  constructor(rawArgv: string[]) {
     super(rawArgv);
     this.yargs.scriptName('projj');
     this.usage = 'Usage: [command] [options]';
@@ -13,4 +11,4 @@ class Program extends Command {
   }
 }
 
-module.exports = Program;
+export = Program;

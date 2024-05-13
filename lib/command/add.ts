@@ -1,15 +1,19 @@
-'use strict';
+import path from 'path';
+import fs from 'mz/fs';
+import chalk from 'chalk';
+import clipboardy from 'clipboardy';
+import utils from '../utils';
+import BaseCommand from '../base_command';
 
-const path = require('path');
-const fs = require('mz/fs');
-const chalk = require('chalk');
-const clipboardy = require('clipboardy');
-const utils = require('../utils');
-const BaseCommand = require('../base_command');
+interface RepoConfig {
+  alias: { [key: string]: string };
+  change_directory?: boolean;
+}
 
 class AddCommand extends BaseCommand {
+  config: RepoConfig;
 
-  async _run(_, [ repo ]) {
+  async _run(_, [repo]: string[]): Promise<void> {
     repo = this.normalizeRepo(repo);
     const key = this.url2dir(repo);
     const base = await this.chooseBaseDirectory();
@@ -44,7 +48,7 @@ class AddCommand extends BaseCommand {
     }
   }
 
-  normalizeRepo(repo) {
+  normalizeRepo(repo: string): string {
     const alias = this.config.alias;
     const keys = Object.keys(alias);
     for (const key of keys) {
@@ -57,10 +61,10 @@ class AddCommand extends BaseCommand {
     return repo;
   }
 
-  get description() {
+  get description(): string {
     return 'Add repository';
   }
 
 }
 
-module.exports = AddCommand;
+export default AddCommand;

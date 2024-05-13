@@ -1,11 +1,9 @@
-'use strict';
-
-const fs = require('mz/fs');
-const BaseCommand = require('../base_command');
+import * as fs from 'mz/fs';
+import BaseCommand from '../base_command';
 
 class SyncCommand extends BaseCommand {
 
-  async _run() {
+  async _run(): Promise<void> {
     const base = this.config.base;
     this.logger.info('Syncing cache from directory %s', base);
     const keys = await this.cache.getKeys();
@@ -17,9 +15,9 @@ class SyncCommand extends BaseCommand {
     await this.cache.dump();
   }
 
-  get description() {
+  get description(): string {
     return 'Sync data from directory';
   }
 }
 
-module.exports = SyncCommand;
+export default SyncCommand;
