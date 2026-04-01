@@ -2,25 +2,18 @@
 
 Manage repository easily.
 
-[![NPM version][npm-image]][npm-url]
-[![build status][travis-image]][travis-url]
-[![Test coverage][codecov-image]][codecov-url]
-[![David deps][david-image]][david-url]
-[![Known Vulnerabilities][snyk-image]][snyk-url]
-[![npm download][download-image]][download-url]
+This fork is published under the `@yiliang114` npm scope. After global installation, the CLI command is still `projj`.
 
-[npm-image]: https://img.shields.io/npm/v/projj.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/projj
-[travis-image]: https://img.shields.io/travis/popomore/projj.svg?style=flat-square
-[travis-url]: https://travis-ci.org/popomore/projj
-[codecov-image]: https://codecov.io/gh/popomore/projj/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/popomore/projj
-[david-image]: https://img.shields.io/david/popomore/projj.svg?style=flat-square
-[david-url]: https://david-dm.org/popomore/projj
-[snyk-image]: https://snyk.io/test/npm/projj/badge.svg?style=flat-square
-[snyk-url]: https://snyk.io/test/npm/projj
-[download-image]: https://img.shields.io/npm/dm/projj.svg?style=flat-square
-[download-url]: https://npmjs.org/package/projj
+[![NPM version][npm-image]][npm-url]
+[![npm download][download-image]][download-url]
+[![GitHub repository][repo-image]][repo-url]
+
+[npm-image]: https://img.shields.io/npm/v/%40yiliang114%2Fprojj.svg?style=flat-square
+[npm-url]: https://www.npmjs.com/package/@yiliang114/projj
+[download-image]: https://img.shields.io/npm/dm/%40yiliang114%2Fprojj.svg?style=flat-square
+[download-url]: https://www.npmjs.com/package/@yiliang114/projj
+[repo-image]: https://img.shields.io/badge/github-yiliang114%2Fprojj-24292f?style=flat-square&logo=github
+[repo-url]: https://github.com/yiliang114/projj
 
 ## Why?
 
@@ -33,10 +26,10 @@ Maybe you create a directory and clone to it. However if you want to clone repos
 ```
 $BASE
 |- github.com
-|  `- popomore
+|  `- yiliang114
 |     `- projj
 `- gitlab.com
-   `- popomore
+   `- yiliang114
       `- projj
 ```
 
@@ -53,10 +46,10 @@ And you can `DO` everything in repository by [Hook](#hook).
 
 ## Installation
 
-Install `projj` globally.
+Install the scoped package globally. The executable remains `projj`.
 
 ```bash
-$ npm i projj -g
+$ npm i -g @yiliang114/projj
 ```
 
 ## Usage
@@ -74,7 +67,7 @@ You can change base directory in `~/.projj/config.json`.
 ### Add Repository
 
 ```bash
-$ projj add git@github.com:popomore/projj.git
+$ projj add git@github.com:yiliang114/projj.git
 ```
 
 it's just like `git clone`, but the repository will be cached by projj. You can find all repositories in `~/.projj/cache.json`
@@ -82,7 +75,7 @@ it's just like `git clone`, but the repository will be cached by projj. You can 
 also support alias which could config at `alias` of `~/.projj/config.json`:
 
 ```bash
-$ projj add github://popomore/projj
+$ projj add github://yiliang114/projj
 ```
 
 ### Importing
