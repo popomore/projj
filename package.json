@@ -1,5 +1,5 @@
 {
-  "name": "projj",
+  "name": "@yiliang114/projj",
   "version": "2.1.0",
   "description": "Manage repository easily.",
   "dependencies": {
@@ -51,7 +51,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:popomore/projj.git"
+    "url": "git+https://github.com/yiliang114/projj.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "author": "popomore <sakura9515@gmail.com>",
   "license": "MIT"
