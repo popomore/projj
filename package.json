@@ -1,6 +1,6 @@
 {
   "name": "@yiliang114/projj",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Manage repository easily.",
   "dependencies": {
     "chalk": "^3.0.0",
@@ -31,6 +31,7 @@
   "scripts": {
     "autod": "autod",
     "lint": "eslint .",
+    "smoke:add": "node test/smoke_add.js",
     "test": "npm run lint -- --fix && npm run test-local",
     "test-local": "egg-bin test",
     "cov": "egg-bin cov",

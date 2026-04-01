@@ -94,7 +94,7 @@ describe('test/projj_add.test.js', () => {
     // .debug()
       .expect('stdout', new RegExp(`pre hook, cwd ${process.cwd()}`))
       .expect('stdout', new RegExp(`post hook, cwd ${target}`))
-      .expect('stdout', /pre hook, get package name projj/)
+      .expect('stdout', /pre hook, get package name @yiliang114\/projj/)
       .expect('stdout', /post hook, get package name spm-bump/)
       .expect('code', 0)
       .end(done);
