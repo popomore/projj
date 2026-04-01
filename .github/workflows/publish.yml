@@ -1,0 +1,60 @@
+name: Publish npm package
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout Git source
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        registry-url: 'https://registry.npmjs.org'
+        cache: npm
+
+    - name: Install dependencies
+      run: npm install --no-package-lock
+
+    - name: Run verification
+      run: npm run ci
+
+    - name: Read package metadata
+      id: package
+      run: |
+        echo "name=$(node -p "require('./package.json').name")" >> "$GITHUB_OUTPUT"
+        echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+    - name: Check npm version existence
+      id: exists
+      run: |
+        if npm view "${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}" version >/dev/null 2>&1; then
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          echo "Package version already exists on npm, skipping publish."
+        else
+          echo "published=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Publish to npm
+      if: steps.exists.outputs.published == 'false'
+      run: npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
