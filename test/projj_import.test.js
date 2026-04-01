@@ -17,6 +17,7 @@ const target = path.join(tmp, 'github.com/popomore/projj');
 
 
 describe('test/projj_import.test.js', () => {
+  const invalidRepo = 'https://popomore.invalid/projj.git';
 
   beforeEach(() => {
     mm(process.env, 'HOME', home);
@@ -46,7 +47,7 @@ describe('test/projj_import.test.js', () => {
 
   describe('when origin url is unknown', () => {
     before(function* () {
-      yield runscript('git init && git remote add origin https://unknown.com/popomore/projj.git', {
+      yield runscript(`git init && git remote add origin ${invalidRepo}`, {
         cwd: repo,
       });
     });
@@ -54,8 +55,8 @@ describe('test/projj_import.test.js', () => {
     it('should fail to clone', function* () {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
       // .debug()
-        .expect('stdout', /importing repository https:\/\/unknown.com\/popomore\/projj.git/)
-        .expect('stderr', /Fail to clone https:\/\/unknown.com\/popomore\/projj.git/)
+        .expect('stdout', new RegExp(`importing repository ${invalidRepo.replace(/\./g, '\\.')}`))
+        .expect('stderr', new RegExp(`Fail to clone ${invalidRepo.replace(/\./g, '\\.')}`))
         .expect('code', 0)
         .end();
     });
@@ -71,7 +72,7 @@ describe('test/projj_import.test.js', () => {
     it('should fail to clone', function* () {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
       // .debug()
-        .notExpect('stdout', /importing repository https:\/\/unknown.com\/popomore\/projj.git/)
+        .notExpect('stdout', new RegExp(`importing repository ${invalidRepo.replace(/\./g, '\\.')}`))
         .expect('code', 0)
         .end();
     });

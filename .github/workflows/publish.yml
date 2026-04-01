@@ -20,12 +20,12 @@ jobs:
 
     steps:
     - name: Checkout Git source
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0
 
     - name: Use Node.js 20
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: '20'
         registry-url: 'https://registry.npmjs.org'
@@ -34,7 +34,16 @@ jobs:
       run: npm install --no-package-lock
 
     - name: Run verification
-      run: npm run ci
+      run: npm run lint && npm run test-local
+      env:
+        http_proxy: ''
+        https_proxy: ''
+        all_proxy: ''
+        no_proxy: ''
+        HTTP_PROXY: ''
+        HTTPS_PROXY: ''
+        ALL_PROXY: ''
+        NO_PROXY: ''
 
     - name: Read package metadata
       id: package

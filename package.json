@@ -1,6 +1,6 @@
 {
   "name": "@yiliang114/projj",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Manage repository easily.",
   "dependencies": {
     "chalk": "^3.0.0",

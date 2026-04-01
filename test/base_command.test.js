@@ -9,8 +9,12 @@ class TestCommand extends BaseCommand {
   constructor() {
     super([]);
     this.cache = {
-      async set() {},
-      async dump() {},
+      async set() {
+        return undefined;
+      },
+      async dump() {
+        return undefined;
+      },
     };
   }
 }
