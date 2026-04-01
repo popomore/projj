@@ -36,10 +36,6 @@ jobs:
     - name: Run verification
       run: npm run lint && npm run test-local
       env:
-        http_proxy: ''
-        https_proxy: ''
-        all_proxy: ''
-        no_proxy: ''
         HTTP_PROXY: ''
         HTTPS_PROXY: ''
         ALL_PROXY: ''
