@@ -54,9 +54,3 @@ jobs:
         HTTPS_PROXY: ''
         ALL_PROXY: ''
         NO_PROXY: ''
-
-    - name: Code Coverage
-      if: runner.os == 'Linux' && matrix.node-version == 20 && secrets.CODECOV_TOKEN != ''
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}

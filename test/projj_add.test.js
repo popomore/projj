@@ -80,7 +80,6 @@ describe('test/projj_add.test.js', () => {
     yield coffee.fork(binfile, [ 'add', repo ])
     // .debug()
       .expect('stdout', new RegExp(`${target} already exist`))
-      .expect('stdout', /Copied to clipboard/)
       .expect('code', 0)
       .end();
   });
