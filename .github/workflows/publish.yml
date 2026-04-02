@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
 
     steps:
     - name: Checkout Git source
@@ -57,8 +58,17 @@ jobs:
           echo "published=false" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Publish to npm
-      if: steps.exists.outputs.published == 'false'
-      run: npm publish --access public
+    - name: Configure npm authentication
+      run: |
+        if [ -n "$NPM_TOKEN" ]; then
+          echo "Using NPM_TOKEN for authentication"
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+        else
+          echo "Using Trusted Publishing (OIDC) - no token needed"
+        fi
       env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    - name: Publish to npm with provenance
+      if: steps.exists.outputs.published == 'false'
+      run: npm publish --provenance --access public

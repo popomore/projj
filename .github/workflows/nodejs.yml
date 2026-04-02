@@ -22,25 +22,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [10, 12]
+        node-version: [18, 20]
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
     - name: Checkout Git Source
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
 
     - name: Install Dependencies
-      run: npm i -g npminstall@5 && npminstall
+      run: npm install --no-package-lock
 
     - name: Continuous Integration
       run: npm run ci
-
-    - name: Code Coverage
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+      env:
+        HTTP_PROXY: ''
+        HTTPS_PROXY: ''
+        ALL_PROXY: ''
+        NO_PROXY: ''
