@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
 
     steps:
     - name: Checkout Git source
@@ -30,6 +29,8 @@ jobs:
       with:
         node-version: '20'
         registry-url: 'https://registry.npmjs.org'
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     - name: Install dependencies
       run: npm install --no-package-lock
@@ -58,17 +59,6 @@ jobs:
           echo "published=false" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Configure npm authentication
-      run: |
-        if [ -n "$NPM_TOKEN" ]; then
-          echo "Using NPM_TOKEN for authentication"
-          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-        else
-          echo "Using Trusted Publishing (OIDC) - no token needed"
-        fi
-      env:
-        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-    - name: Publish to npm with provenance
+    - name: Publish to npm
       if: steps.exists.outputs.published == 'false'
-      run: npm publish --provenance --access public
+      run: npm publish --access public
