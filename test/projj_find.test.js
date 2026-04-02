@@ -5,6 +5,7 @@ const coffee = require('coffee');
 const mm = require('mm');
 const fs = require('mz/fs');
 const rimraf = require('mz-modules/rimraf');
+const { pathPattern } = require('./test_helper');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -24,7 +25,7 @@ describe('test/projj_find.test.js', () => {
     yield coffee.fork(binfile, [ 'find', 'egg' ])
       // .debug()
       .beforeScript(path.join(__dirname, 'fixtures/mock_darwin.js'))
-      .expect('stdout', new RegExp(`Change directory to ${home}/github.com/eggjs/egg`))
+      .expect('stdout', pathPattern(`Change directory to ${home}/github.com/eggjs/egg`))
       // .expect('stdout', new RegExp(`cd ${home}/github.com/eggjs/egg`))
       .expect('code', 0)
       .end();
@@ -38,7 +39,7 @@ describe('test/projj_find.test.js', () => {
     yield coffee.fork(binfile, [ 'find', 'egg' ])
       .beforeScript(path.join(__dirname, 'fixtures/mock_not_darwin.js'))
       .expect('stderr', new RegExp('Change directory only supported in darwin'))
-      .expect('stdout', new RegExp(`find repo egg's location: ${home}/github.com/eggjs/egg`))
+      .expect('stdout', pathPattern(`find repo egg's location: ${home}/github.com/eggjs/egg`))
       .expect('code', 0)
       .end();
   });
@@ -61,7 +62,7 @@ describe('test/projj_find.test.js', () => {
 
     yield coffee.fork(binfile, [ 'find', 'egg' ])
       // .debug()
-      .expect('stdout', new RegExp(`find repo egg's location: ${home}/github.com/eggjs/egg`))
+      .expect('stdout', pathPattern(`find repo egg's location: ${home}/github.com/eggjs/egg`))
       .expect('code', 0)
       .end();
   });
@@ -73,7 +74,7 @@ describe('test/projj_find.test.js', () => {
 
     yield coffee.fork(binfile, [ 'find', '/egg' ])
       // .debug()
-      .expect('stdout', new RegExp(`find repo /egg's location: ${home}/github.com/eggjs/egg`))
+      .expect('stdout', pathPattern(`find repo /egg's location: ${home}/github.com/eggjs/egg`))
       .expect('code', 0)
       .end();
   });
@@ -85,7 +86,7 @@ describe('test/projj_find.test.js', () => {
 
     yield coffee.fork(binfile, [ 'find', 'eggjs/autod' ])
       // .debug()
-      .expect('stdout', new RegExp(`find repo eggjs/autod's location: ${home}/gitlab.com/eggjs/autod-egg`))
+      .expect('stdout', pathPattern(`find repo eggjs/autod's location: ${home}/gitlab.com/eggjs/autod-egg`))
       .expect('code', 0)
       .end();
   });
@@ -99,7 +100,7 @@ describe('test/projj_find.test.js', () => {
       .write('\n')
       // .debug()
       .expect('stdout', new RegExp('Please select the correct repo'))
-      .expect('stdout', new RegExp(`find repo egg-core's location: ${home}/github.com/eggjs/egg-core`))
+      .expect('stdout', pathPattern(`find repo egg-core's location: ${home}/github.com/eggjs/egg-core`))
       .expect('code', 0)
       .end();
   });

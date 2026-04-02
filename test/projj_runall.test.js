@@ -5,6 +5,7 @@ const coffee = require('coffee');
 const mm = require('mm');
 const rimraf = require('mz-modules/rimraf');
 const fs = require('mz/fs');
+const { pathPattern } = require('./test_helper');
 
 
 const binfile = path.join(__dirname, '../bin/projj.js');
@@ -36,10 +37,10 @@ describe('test/projj_runall.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'runall', 'custom' ])
     // .debug()
-      .expect('stdout', new RegExp(`Run hook custom for ${home}/github.com/popomore/test1`))
-      .expect('stdout', new RegExp(`Run hook custom for ${home}/github.com/popomore/test2`))
-      .expect('stdout', new RegExp(`get package name test1 from ${home}/github.com/popomore/test1`))
-      .expect('stdout', new RegExp(`get package name test2 from ${home}/github.com/popomore/test2`))
+      .expect('stdout', pathPattern(`Run hook custom for ${home}/github.com/popomore/test1`))
+      .expect('stdout', pathPattern(`Run hook custom for ${home}/github.com/popomore/test2`))
+      .expect('stdout', pathPattern(`get package name test1 from ${home}/github.com/popomore/test1`))
+      .expect('stdout', pathPattern(`get package name test2 from ${home}/github.com/popomore/test2`))
       .expect('code', 0)
       .end(done);
   });
@@ -48,8 +49,8 @@ describe('test/projj_runall.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'runall', 'error' ])
     // .debug()
-      .expect('stdout', new RegExp(`Run hook error for ${home}/github.com/popomore/test1`))
-      .expect('stdout', new RegExp(`Run hook error for ${home}/github.com/popomore/test2`))
+      .expect('stdout', pathPattern(`Run hook error for ${home}/github.com/popomore/test1`))
+      .expect('stdout', pathPattern(`Run hook error for ${home}/github.com/popomore/test2`))
       .expect('stderr', /Run "sh -c exit 1" error, exit code 1/)
       .expect('code', 0)
       .end(done);

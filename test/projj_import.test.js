@@ -7,6 +7,7 @@ const rimraf = require('mz-modules/rimraf');
 const runscript = require('runscript');
 const mkdirp = require('mz-modules/mkdirp');
 const fs = require('mz/fs');
+const { literalPattern } = require('./test_helper');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -37,7 +38,7 @@ describe('test/projj_import.test.js', () => {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
       // .debug()
         .expect('stdout', /importing repository https:\/\/github.com\/popomore\/projj.git/)
-        .expect('stdout', new RegExp(`Cloning into ${target}`))
+        .expect('stdout', literalPattern(`Cloning into ${target}`))
         .expect('stdout', /preadd/)
         .expect('stdout', /postadd/)
         .expect('code', 0)
@@ -132,7 +133,7 @@ describe('test/projj_import.test.js', () => {
       yield coffee.fork(binfile, [ 'import', '--cache' ])
         // .debug()
         .expect('stdout', /importing repository https:\/\/github.com\/popomore\/projj.git/)
-        .expect('stdout', new RegExp(`Cloning into ${target}`))
+        .expect('stdout', literalPattern(`Cloning into ${target}`))
         .expect('stdout', /preadd/)
         .expect('stdout', /postadd/)
         .expect('code', 0)

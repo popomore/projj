@@ -4,6 +4,7 @@ const path = require('path');
 const coffee = require('coffee');
 const mm = require('mm');
 const rimraf = require('mz-modules/rimraf');
+const { pathPattern } = require('./test_helper');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -31,8 +32,8 @@ describe('test/projj_run.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'run', 'custom' ], { cwd })
     // .debug()
-      .expect('stdout', new RegExp(`Run hook custom for ${home}/github.com/popomore/test1`))
-      .expect('stdout', new RegExp(`get package name test1 from ${home}/github.com/popomore/test1`))
+      .expect('stdout', pathPattern(`Run hook custom for ${home}/github.com/popomore/test1`))
+      .expect('stdout', pathPattern(`get package name test1 from ${home}/github.com/popomore/test1`))
       .expect('code', 0)
       .end(done);
   });

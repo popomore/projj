@@ -7,6 +7,7 @@ const mm = require('mm');
 const rimraf = require('mz-modules/rimraf');
 const mkdirp = require('mz-modules/mkdirp');
 const assert = require('assert');
+const { literalPattern } = require('./test_helper');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -22,17 +23,18 @@ describe('test/projj_init.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'init' ])
     // .debug()
-      .expect('stdout', new RegExp(`Set base directory: ${home}\n`))
+      .expect('stdout', literalPattern(`Set base directory: ${home}\n`))
       .expect('code', 0)
       .end(done);
   });
 
   it('should get base directory with tilde', done => {
     const home = path.join(fixtures, 'base-tilde');
+    const target = path.join(home, 'code');
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'init' ])
     // .debug()
-      .expect('stdout', new RegExp(`Set base directory: ${home}/code\n`))
+      .expect('stdout', literalPattern(`Set base directory: ${target}\n`))
       .expect('code', 0)
       .end(done);
   });
@@ -56,9 +58,10 @@ describe('test/projj_init.test.js', () => {
 
   it('should set base with relative path', done => {
     mm(process.env, 'HOME', tmp);
+    const target = path.join(process.cwd(), 'code');
     coffee.fork(binfile, [ 'init' ])
     // .debug()
-      .expect('stdout', new RegExp(`Set base directory: ${process.cwd()}/code\n`))
+      .expect('stdout', literalPattern(`Set base directory: ${target}\n`))
       .expect('code', 0)
       .write('code')
       .end(done);

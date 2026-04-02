@@ -47,4 +47,41 @@ describe('test/base_command.test.js', () => {
     assert.strictEqual(env.NO_PROXY, 'localhost,127.0.0.1');
   });
 
+  it('should prepend hook directory to PATH with the provided delimiter', () => {
+    const command = new TestCommand();
+    const env = command.buildHookEnv('custom', {
+      PATH: 'C:\\Windows\\System32',
+    }, ';');
+
+    assert.strictEqual(env.PATH, `${path.join(process.env.HOME, '.projj/hooks')};C:\\Windows\\System32`);
+    assert.strictEqual(env.PROJJ_HOOK_NAME, 'custom');
+  });
+
+  it('should match repo keys relative to base directories across separators', () => {
+    const command = new TestCommand();
+    const base = String.raw`D:\a\projj\projj\test\fixtures\remove\temp`;
+    const keys = [
+      String.raw`D:\a\projj\projj\test\fixtures\remove\temp\github.com\popomore\projj`,
+      String.raw`D:\a\projj\projj\test\fixtures\remove\temp\github.com\eggjs\egg`,
+    ];
+    command.config = {
+      base: [ base ],
+    };
+
+    assert.deepStrictEqual(command.matchRepoKeys(keys, 'projj'), [ keys[0] ]);
+    assert.deepStrictEqual(command.matchRepoKeys(keys, '/projj'), [ keys[0] ]);
+  });
+
+  it('should derive repo label from windows cache key', () => {
+    const command = new TestCommand();
+    command.config = {
+      base: [ String.raw`D:\a\projj\projj\test\fixtures\remove\temp` ],
+    };
+
+    assert.strictEqual(
+      command.getRepoLabel(String.raw`D:\a\projj\projj\test\fixtures\remove\temp\github.com\eggjs\autod-egg`),
+      'eggjs/autod-egg'
+    );
+  });
+
 });

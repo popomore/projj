@@ -6,6 +6,7 @@ const coffee = require('coffee');
 const mm = require('mm');
 const { rimraf, mkdirp } = require('mz-modules');
 const assert = require('assert');
+const { literalPattern } = require('./test_helper');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -32,7 +33,7 @@ describe('test/projj_add.test.js', () => {
     coffee.fork(binfile, [ 'add', repo ])
       // .debug()
       .expect('stdout', new RegExp(`Start adding repository ${repo}`))
-      .expect('stdout', new RegExp(`Cloning into ${target}`))
+      .expect('stdout', literalPattern(`Cloning into ${target}`))
       .expect('code', 0)
       .end(err => {
         assert.ifError(err);
@@ -57,7 +58,7 @@ describe('test/projj_add.test.js', () => {
     coffee.fork(binfile, [ 'add', repo ])
     // .debug()
       .expect('stdout', new RegExp('Start adding repository https://github.com/popomore/projj.git'))
-      .expect('stdout', new RegExp(`Cloning into ${target}`))
+      .expect('stdout', literalPattern(`Cloning into ${target}`))
       .expect('code', 0)
       .end(err => {
         assert.ifError(err);
@@ -79,7 +80,7 @@ describe('test/projj_add.test.js', () => {
 
     yield coffee.fork(binfile, [ 'add', repo ])
     // .debug()
-      .expect('stdout', new RegExp(`${target} already exist`))
+      .expect('stdout', literalPattern(`${target} already exist`))
       .expect('code', 0)
       .end();
   });
@@ -91,8 +92,8 @@ describe('test/projj_add.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'add', repo ])
     // .debug()
-      .expect('stdout', new RegExp(`pre hook, cwd ${process.cwd()}`))
-      .expect('stdout', new RegExp(`post hook, cwd ${target}`))
+      .expect('stdout', literalPattern(`pre hook, cwd ${process.cwd()}`))
+      .expect('stdout', literalPattern(`post hook, cwd ${target}`))
       .expect('stdout', /pre hook, get package name @yiliang114\/projj/)
       .expect('stdout', /post hook, get package name spm-bump/)
       .expect('code', 0)
@@ -109,8 +110,8 @@ describe('test/projj_add.test.js', () => {
     // .debug()
       .beforeScript(path.join(__dirname, 'fixtures/mock_darwin.js'))
       .expect('stdout', new RegExp(`Start adding repository ${repo}`))
-      .expect('stdout', new RegExp(`Cloning into ${target}`))
-      .expect('stdout', new RegExp(`Change directory to ${target}`))
+      .expect('stdout', literalPattern(`Cloning into ${target}`))
+      .expect('stdout', literalPattern(`Change directory to ${target}`))
       .notExpect('stdout', /Copied to clipboard/)
       .expect('code', 0)
       .end(done);
@@ -126,7 +127,7 @@ describe('test/projj_add.test.js', () => {
     // .debug()
       .beforeScript(path.join(__dirname, 'fixtures/mock_not_darwin.js'))
       .expect('stdout', new RegExp(`Start adding repository ${repo}`))
-      .expect('stdout', new RegExp(`Cloning into ${target}`))
+      .expect('stdout', literalPattern(`Cloning into ${target}`))
       .expect('stdout', /Copied to clipboard/)
       .expect('stderr', new RegExp('Change directory only supported in darwin'))
       .expect('code', 0)
@@ -136,7 +137,7 @@ describe('test/projj_add.test.js', () => {
   it('should add a git repo when multiple directory', function* () {
     const home = path.join(fixtures, 'multiple-directory');
     const repo = 'https://github.com/popomore/projj.git';
-    const target = path.join(home, 'a/github.com/popomore/projj');
+    const target = path.join(home, 'a', 'github.com', 'popomore', 'projj');
     mm(process.env, 'HOME', home);
 
     yield coffee.fork(binfile, [ 'add', repo ])
@@ -145,7 +146,7 @@ describe('test/projj_add.test.js', () => {
       .write('\n')
       .expect('code', 0)
       .expect('stdout', new RegExp(`Start adding repository ${repo}`))
-      .expect('stdout', new RegExp(`Cloning into ${target}`))
+      .expect('stdout', literalPattern(`Cloning into ${target}`))
       .end();
 
     assert(fs.existsSync(path.join(target, 'package.json')));

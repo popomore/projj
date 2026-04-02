@@ -5,6 +5,7 @@ const coffee = require('coffee');
 const mm = require('mm');
 const rimraf = require('mz-modules/rimraf');
 const fs = require('mz/fs');
+const { literalPattern } = require('./test_helper');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -18,16 +19,17 @@ describe('test/projj_sync.test.js', () => {
 
   it('should run hook that do not exist', function* () {
     const home = path.join(fixtures, 'hook');
+    const removedRepo = path.join(tmp, 'github.com', 'popomore', 'projj');
     mm(process.env, 'HOME', home);
 
     const content = JSON.stringify({
-      [path.join(tmp, 'github.com/popomore/projj')]: {},
+      [removedRepo]: {},
     });
     yield fs.writeFile(path.join(home, '.projj/cache.json'), content);
 
     yield coffee.fork(binfile, [ 'sync' ])
     // .debug()
-      .expect('stdout', new RegExp(`Remove ${tmp}/github.com/popomore/projj that don't exist`))
+      .expect('stdout', literalPattern(`Remove ${removedRepo} that don't exist`))
       .expect('code', 0)
       .end();
   });

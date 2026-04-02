@@ -7,9 +7,11 @@ on:
   push:
     branches:
       - main
+      - master
   pull_request:
     branches:
       - main
+      - master
   schedule:
     - cron: '0 2 * * *'
 
@@ -20,37 +22,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20, 22]
+        node-version: [10, 12]
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
     - name: Checkout Git Source
-      uses: actions/checkout@v5
+      uses: actions/checkout@v2
 
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v5
+      uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
 
     - name: Install Dependencies
-      run: npm install --no-package-lock
+      run: npm i -g npminstall@5 && npminstall
 
-    - name: Lint
-      run: npm run lint
+    - name: Continuous Integration
+      run: npm run ci
 
-    - name: Unit tests
-      run: npm run test-local
-      env:
-        HTTP_PROXY: ''
-        HTTPS_PROXY: ''
-        ALL_PROXY: ''
-        NO_PROXY: ''
-
-    - name: Coverage
-      if: runner.os == 'Linux' && matrix.node-version == 20
-      run: npm run cov
-      env:
-        HTTP_PROXY: ''
-        HTTPS_PROXY: ''
-        ALL_PROXY: ''
-        NO_PROXY: ''
+    - name: Code Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
