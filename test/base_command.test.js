@@ -84,4 +84,29 @@ describe('test/base_command.test.js', () => {
     );
   });
 
+  it('should forward buffered child process output to child logger streams', () => {
+    const command = new TestCommand();
+    const writes = {
+      stdout: [],
+      stderr: [],
+    };
+
+    command.childLogger = {
+      log(message) {
+        writes.stdout.push(message);
+      },
+      error(message) {
+        writes.stderr.push(message);
+      },
+    };
+
+    command.forwardScriptOutput({
+      stdout: Buffer.from('hook stdout\n'),
+      stderr: Buffer.from('hook stderr\n'),
+    });
+
+    assert.deepStrictEqual(writes.stdout, [ 'hook stdout' ]);
+    assert.deepStrictEqual(writes.stderr, [ 'hook stderr' ]);
+  });
+
 });

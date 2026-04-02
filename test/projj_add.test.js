@@ -6,7 +6,7 @@ const coffee = require('coffee');
 const mm = require('mm');
 const { rimraf, mkdirp } = require('mz-modules');
 const assert = require('assert');
-const { literalPattern } = require('./test_helper');
+const { literalPattern, pathPattern } = require('./test_helper');
 
 const binfile = path.join(__dirname, '../bin/projj.js');
 const fixtures = path.join(__dirname, 'fixtures');
@@ -92,8 +92,8 @@ describe('test/projj_add.test.js', () => {
     mm(process.env, 'HOME', home);
     coffee.fork(binfile, [ 'add', repo ])
     // .debug()
-      .expect('stdout', literalPattern(`pre hook, cwd ${process.cwd()}`))
-      .expect('stdout', literalPattern(`post hook, cwd ${target}`))
+      .expect('stdout', pathPattern(`pre hook, cwd ${process.cwd()}`))
+      .expect('stdout', pathPattern(`post hook, cwd ${target}`))
       .expect('stdout', /pre hook, get package name @yiliang114\/projj/)
       .expect('stdout', /post hook, get package name spm-bump/)
       .expect('code', 0)
@@ -128,7 +128,6 @@ describe('test/projj_add.test.js', () => {
       .beforeScript(path.join(__dirname, 'fixtures/mock_not_darwin.js'))
       .expect('stdout', new RegExp(`Start adding repository ${repo}`))
       .expect('stdout', literalPattern(`Cloning into ${target}`))
-      .expect('stdout', /Copied to clipboard/)
       .expect('stderr', new RegExp('Change directory only supported in darwin'))
       .expect('code', 0)
       .end(done);

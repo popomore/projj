@@ -91,7 +91,7 @@ describe('test/projj_import.test.js', () => {
       yield coffee.fork(binfile, [ 'import', path.join(fixtures, 'importdir') ])
       // .debug()
         .expect('stdout', /importing repository https:\/\/github.com\/popomore\/projj.git/)
-        .expect('stderr', new RegExp(`${target} exists`))
+        .expect('stderr', literalPattern(`${target} exists`))
         .expect('code', 0)
         .end();
     });

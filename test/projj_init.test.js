@@ -70,7 +70,7 @@ describe('test/projj_init.test.js', () => {
   it('should upgrade', function* () {
     mm(process.env, 'HOME', tmp);
     yield mkdirp(path.join(tmp, '.projj'));
-    yield fs.writeFile(path.join(tmp, '.projj/config.json'), `{"base":"${tmp}"}`);
+    yield fs.writeFile(path.join(tmp, '.projj/config.json'), JSON.stringify({ base: tmp }));
 
     yield coffee.fork(binfile, [ 'init' ])
       // .debug()
@@ -85,7 +85,7 @@ describe('test/projj_init.test.js', () => {
   it('should not upgrade', function* () {
     mm(process.env, 'HOME', tmp);
     yield mkdirp(path.join(tmp, '.projj'));
-    yield fs.writeFile(path.join(tmp, '.projj/config.json'), `{"base":"${tmp}"}`);
+    yield fs.writeFile(path.join(tmp, '.projj/config.json'), JSON.stringify({ base: tmp }));
     yield fs.writeFile(path.join(tmp, '.projj/cache.json'), '{"version":"v1"}');
 
     yield coffee.fork(binfile, [ 'init' ])

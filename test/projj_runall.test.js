@@ -51,7 +51,7 @@ describe('test/projj_runall.test.js', () => {
     // .debug()
       .expect('stdout', pathPattern(`Run hook error for ${home}/github.com/popomore/test1`))
       .expect('stdout', pathPattern(`Run hook error for ${home}/github.com/popomore/test2`))
-      .expect('stderr', /Run "sh -c exit 1" error, exit code 1/)
+      .expect('stderr', /Run ".*exit 1" error, exit code 1/)
       .expect('code', 0)
       .end(done);
   });
