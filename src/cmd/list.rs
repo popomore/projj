@@ -11,7 +11,5 @@ pub fn run() -> Result<()> {
         println!("{}", repo.path.display());
     }
 
-    eprintln!("{} repositories", repos.len());
-
     Ok(())
 }
