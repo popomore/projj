@@ -21,14 +21,11 @@ No more `~/code/misc/old-projj-backup`. Clone once, find instantly.
 ## Install
 
 ```bash
-# Homebrew
-brew install popomore/tap/projj
-
 # Cargo
 cargo install projj
 
-# Shell script
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/popomore/projj/releases/latest/download/projj-installer.sh | sh
+# Homebrew (after first release)
+brew install popomore/tap/projj
 ```
 
 ## Quick Start
