@@ -47,6 +47,33 @@ jobs:
           key: ${{ matrix.os }}
       - run: cargo test --all-features
 
+  deny:
+    name: Deny (licenses & advisories)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+
+  doc:
+    name: Documentation
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: "-Dwarnings"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo doc --no-deps
+
+  semver:
+    name: Semver Check
+    runs-on: ubuntu-latest
+    # Only run on PRs (compares against published version)
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: obi1kenobi/cargo-semver-checks-action@v2
+
   coverage:
     name: Coverage
     runs-on: ubuntu-latest

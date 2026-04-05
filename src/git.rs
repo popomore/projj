@@ -21,12 +21,12 @@ impl RepoInfo {
 /// Parse a repo argument into `RepoInfo`.
 ///
 /// Supported formats:
-/// - git@github.com:owner/repo.git                (SSH)
-/// - <ssh://git@git.gitlab.cn:2224/owner/repo.git>  (SSH with port)
-/// - <https://github.com/owner/repo.git>            (HTTPS)
-/// - <https://192.168.1.1:8080/owner/repo.git>      (HTTPS with IP:port)
-/// - owner/repo                                   (short form)
-/// - ./path/to/local/repo                         (local path)
+/// - `git@github.com:owner/repo.git` (SSH)
+/// - `ssh://git@host:port/owner/repo.git` (SSH with port)
+/// - `https://github.com/owner/repo.git` (HTTPS)
+/// - `https://192.168.1.1:8080/owner/repo.git` (HTTPS with IP and port)
+/// - `owner/repo` (short form)
+/// - `./path/to/local/repo` (local path)
 pub fn parse_repo(input: &str, default_platform: &str) -> Result<RepoInfo> {
     // Local path
     if input.starts_with('.') || input.starts_with('/') || std::path::Path::new(input).is_absolute()
@@ -155,7 +155,7 @@ fn parse_https(input: &str) -> Result<RepoInfo> {
     })
 }
 
-/// Split "host[:port]/rest/of/path" into ("host[:port]", "rest/of/path")
+/// Split `host\[:port\]/rest/of/path` into `(host\[:port\], rest/of/path)`
 fn split_host_path(s: &str) -> Option<(&str, &str)> {
     // Find the first '/' that comes after the host[:port]
     let slash_pos = s.find('/')?;

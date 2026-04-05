@@ -69,8 +69,8 @@ impl Config {
     }
 
     /// Resolve a script name with three-level lookup:
-    /// 1. [scripts] table in config
-    /// 2. Executable file in ~/.projj/hooks/
+    /// 1. `scripts` table in config
+    /// 2. Executable file in `~/.projj/hooks/`
     /// 3. Raw command as-is
     pub fn resolve_script(&self, name: &str) -> String {
         // 1. Scripts table
