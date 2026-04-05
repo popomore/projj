@@ -55,6 +55,58 @@ pub fn fzf_select(choices: &[String], query: Option<&str>) -> Result<Option<Stri
     }
 }
 
+/// Run fzf with indexed items ("INDEX\tDISPLAY" per line).
+/// fzf shows only the display part (--with-nth=2..) but returns the full line.
+/// Parses the index from the returned line. Returns None if cancelled.
+pub fn fzf_indexed(items: &[String], query: Option<&str>) -> Result<Option<usize>> {
+    if items.is_empty() {
+        return Ok(None);
+    }
+
+    if has_fzf() {
+        let mut cmd = Command::new("fzf");
+        cmd.args(["--ansi", "--delimiter=\t", "--with-nth=2.."])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::inherit());
+
+        if let Some(q) = query {
+            cmd.args(["--query", q]);
+        }
+
+        let mut child = cmd.spawn()?;
+
+        if let Some(stdin) = child.stdin.as_mut() {
+            let input = items.join("\n");
+            stdin.write_all(input.as_bytes())?;
+        }
+
+        let output = child.wait_with_output()?;
+
+        if output.status.success() {
+            let line = String::from_utf8(output.stdout)?.trim().to_string();
+            // Extract index before first tab
+            if let Some(idx_str) = line.split('\t').next()
+                && let Ok(idx) = idx_str.parse::<usize>()
+            {
+                return Ok(Some(idx));
+            }
+        }
+        Ok(None)
+    } else {
+        // Fallback: strip index prefix for display
+        let display: Vec<String> = items
+            .iter()
+            .filter_map(|s| s.split_once('\t').map(|(_, d)| d.to_string()))
+            .collect();
+        let selection = dialoguer::Select::new()
+            .with_prompt("Select repository")
+            .items(&display)
+            .interact_opt()?;
+        Ok(selection)
+    }
+}
+
 /// Select from choices, using fzf if available, otherwise dialoguer.
 pub fn select_one(choices: &[String], prompt: &str, query: Option<&str>) -> Result<Option<String>> {
     if choices.is_empty() {

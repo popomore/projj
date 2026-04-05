@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
 
 use anyhow::Result;
 
@@ -36,19 +35,12 @@ pub fn run(keyword: Option<&str>) -> Result<()> {
         return Ok(());
     }
 
-    let (display_items, path_map) = build_display_items(&matched, has_multiple_bases);
+    let display_items = build_display_items(&matched, has_multiple_bases);
 
-    let selected = integration::select_one(&display_items, "Select repository", keyword)?;
+    // Each line is "INDEX\tDISPLAY", fzf shows only DISPLAY but returns "INDEX\tDISPLAY"
+    let selected = integration::fzf_indexed(&display_items, keyword)?;
     match selected {
-        Some(display) => {
-            if let Some(path) = path_map.get(&display) {
-                println!("{}", path.display());
-            } else {
-                // Selected a header line, not a repo
-                eprintln!("No repository selected");
-                std::process::exit(1);
-            }
-        }
+        Some(idx) => println!("{}", matched[idx].path.display()),
         None => std::process::exit(1),
     }
 
@@ -90,20 +82,7 @@ const BASE_COLORS: &[&str] = &[
     "\x1b[48;5;238m\x1b[97m", // dark gray
 ];
 
-/// Build display items with group tag on every line:
-///
-/// ```text
-///  github.com  popomore/projj    git@github.com:popomore/projj.git
-/// ```
-///
-/// Group tag (colored) + owner/repo + git URL (dimmed), all on one line.
-/// This ensures group context is preserved when fzf filters results.
-fn build_display_items(
-    repos: &[Repo],
-    has_multiple_bases: bool,
-) -> (Vec<String>, BTreeMap<String, PathBuf>) {
-    let mut path_map = BTreeMap::new();
-
+fn build_display_items(repos: &[Repo], has_multiple_bases: bool) -> Vec<String> {
     // Assign color per group
     let mut group_colors: BTreeMap<String, &str> = BTreeMap::new();
     let mut color_idx = 0;
@@ -116,34 +95,25 @@ fn build_display_items(
         }
     }
 
-    let mut items = Vec::new();
-
-    for repo in repos {
-        let group_key = group_key_for(repo, has_multiple_bases);
-        let color = group_colors[&group_key];
-        let display = format!(
-            "{} {} {} {}  {}{}{}",
-            color,
-            group_key,
-            RESET,
-            repo.short_key(),
-            DIM,
-            repo.git_url(),
-            RESET,
-        );
-        // fzf strips ANSI codes from output, so use plain text as map key
-        let plain = strip_ansi(&display);
-        path_map.insert(plain, repo.path.clone());
-        items.push(display);
-    }
-
-    (items, path_map)
-}
-
-/// Strip ANSI escape codes from a string.
-fn strip_ansi(s: &str) -> String {
-    let re = regex_lite::Regex::new(r"\x1b\[[0-9;]*m").unwrap();
-    re.replace_all(s, "").to_string()
+    repos
+        .iter()
+        .enumerate()
+        .map(|(i, repo)| {
+            let group_key = group_key_for(repo, has_multiple_bases);
+            let color = group_colors[&group_key];
+            // Format: "INDEX\tCOLORED_DISPLAY"
+            format!(
+                "{i}\t{} {} {} {}  {}{}{}",
+                color,
+                group_key,
+                RESET,
+                repo.short_key(),
+                DIM,
+                repo.git_url(),
+                RESET,
+            )
+        })
+        .collect()
 }
 
 fn group_key_for(repo: &Repo, has_multiple_bases: bool) -> String {
