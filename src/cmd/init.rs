@@ -1,6 +1,8 @@
 use anyhow::Result;
 use dialoguer::Input;
 
+use std::collections::HashMap;
+
 use crate::config::{BaseDir, Config, HookEntry, config_exists, config_path, hooks_dir};
 use crate::hook;
 use crate::repo_source;
@@ -27,12 +29,12 @@ pub fn run() -> Result<()> {
         let config = Config {
             base: BaseDir::Single(base),
             platform,
-            scripts: Default::default(),
+            scripts: HashMap::default(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
                 matcher: None,
                 command: "zoxide".to_string(),
-                env: Default::default(),
+                env: HashMap::default(),
             }],
         };
         config.save()?;

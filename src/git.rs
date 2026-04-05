@@ -18,13 +18,13 @@ impl RepoInfo {
     }
 }
 
-/// Parse a repo argument into RepoInfo.
+/// Parse a repo argument into `RepoInfo`.
 ///
 /// Supported formats:
 /// - git@github.com:owner/repo.git                (SSH)
-/// - ssh://git@git.gitlab.cn:2224/owner/repo.git  (SSH with port)
-/// - https://github.com/owner/repo.git            (HTTPS)
-/// - https://192.168.1.1:8080/owner/repo.git      (HTTPS with IP:port)
+/// - <ssh://git@git.gitlab.cn:2224/owner/repo.git>  (SSH with port)
+/// - <https://github.com/owner/repo.git>            (HTTPS)
+/// - <https://192.168.1.1:8080/owner/repo.git>      (HTTPS with IP:port)
 /// - owner/repo                                   (short form)
 /// - ./path/to/local/repo                         (local path)
 pub fn parse_repo(input: &str, default_platform: &str) -> Result<RepoInfo> {
@@ -58,7 +58,7 @@ pub fn parse_repo(input: &str, default_platform: &str) -> Result<RepoInfo> {
         let host = default_platform.to_string();
         let repo = repo.to_string();
         let owner = owner.to_string();
-        let clone_url = format!("git@{}:{}/{}.git", host, owner, repo);
+        let clone_url = format!("git@{host}:{owner}/{repo}.git");
         return Ok(RepoInfo {
             host,
             owner,
@@ -67,7 +67,7 @@ pub fn parse_repo(input: &str, default_platform: &str) -> Result<RepoInfo> {
         });
     }
 
-    bail!("Cannot parse repository: {}", input)
+    bail!("Cannot parse repository: {input}")
 }
 
 /// Strip port from host string: "git.gitlab.cn:2224" → "git.gitlab.cn"
@@ -87,11 +87,11 @@ fn parse_ssh(input: &str) -> Result<RepoInfo> {
     let rest = input.strip_prefix("git@").unwrap();
     let (host_part, path) = rest
         .split_once(':')
-        .ok_or_else(|| anyhow::anyhow!("Invalid SSH URL: {}", input))?;
+        .ok_or_else(|| anyhow::anyhow!("Invalid SSH URL: {input}"))?;
     let path = path.strip_suffix(".git").unwrap_or(path);
     let (owner, repo) = path
         .split_once('/')
-        .ok_or_else(|| anyhow::anyhow!("Invalid SSH URL: {}", input))?;
+        .ok_or_else(|| anyhow::anyhow!("Invalid SSH URL: {input}"))?;
     Ok(RepoInfo {
         host: strip_port(host_part),
         owner: owner.to_string(),
@@ -105,18 +105,18 @@ fn parse_ssh_scheme(input: &str) -> Result<RepoInfo> {
     let without_scheme = input
         .strip_prefix("ssh://git@")
         .or_else(|| input.strip_prefix("ssh://"))
-        .ok_or_else(|| anyhow::anyhow!("Invalid SSH URL: {}", input))?;
+        .ok_or_else(|| anyhow::anyhow!("Invalid SSH URL: {input}"))?;
 
     // Split host:port from path
     // Could be: git.gitlab.cn:2224/web/cms.git
     // or:       git.gitlab.cn/web/cms.git
     let (host_part, path) = split_host_path(without_scheme)
-        .ok_or_else(|| anyhow::anyhow!("Invalid SSH URL: {}", input))?;
+        .ok_or_else(|| anyhow::anyhow!("Invalid SSH URL: {input}"))?;
 
     let path = path.strip_suffix(".git").unwrap_or(path);
     let (owner, repo) = path
         .split_once('/')
-        .ok_or_else(|| anyhow::anyhow!("Invalid SSH URL: {}", input))?;
+        .ok_or_else(|| anyhow::anyhow!("Invalid SSH URL: {input}"))?;
 
     Ok(RepoInfo {
         host: strip_port(host_part),
@@ -135,11 +135,11 @@ fn parse_https(input: &str) -> Result<RepoInfo> {
         .unwrap();
 
     let (host_part, path) = split_host_path(without_scheme)
-        .ok_or_else(|| anyhow::anyhow!("Invalid HTTPS URL: {}", input))?;
+        .ok_or_else(|| anyhow::anyhow!("Invalid HTTPS URL: {input}"))?;
 
     let parts: Vec<&str> = path.splitn(2, '/').collect();
     if parts.len() < 2 {
-        bail!("Invalid HTTPS URL: {}", input);
+        bail!("Invalid HTTPS URL: {input}");
     }
     let owner = parts[0].to_string();
     let repo = parts[1]
@@ -170,11 +170,11 @@ fn split_host_path(s: &str) -> Option<(&str, &str)> {
 fn parse_local_path(input: &str) -> Result<RepoInfo> {
     let path = Path::new(input)
         .canonicalize()
-        .map_err(|_| anyhow::anyhow!("Local path does not exist: {}", input))?;
+        .map_err(|_| anyhow::anyhow!("Local path does not exist: {input}"))?;
 
     let git_dir = path.join(".git");
     if !git_dir.exists() {
-        bail!("Not a git repository: {}", input);
+        bail!("Not a git repository: {input}");
     }
 
     let output = std::process::Command::new("git")

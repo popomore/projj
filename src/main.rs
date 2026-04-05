@@ -56,7 +56,7 @@ enum Commands {
         #[arg(long)]
         raw: bool,
     },
-    /// Output shell setup (completions + p() function)
+    /// Output shell setup (completions + `p()` function)
     #[command(name = "shell-setup")]
     ShellSetup {
         /// Shell type

@@ -15,7 +15,7 @@ pub fn run(keyword: &str) -> Result<()> {
     let matched = repo_source::find(&repos, keyword);
 
     if matched.is_empty() {
-        bail!("No repository found matching: {}", keyword);
+        bail!("No repository found matching: {keyword}");
     }
 
     let paths: Vec<String> = matched
@@ -24,9 +24,8 @@ pub fn run(keyword: &str) -> Result<()> {
         .collect();
     let selected = integration::select_one(&paths, "Select repository to remove", Some(keyword))?;
 
-    let target = match selected {
-        Some(s) => s,
-        None => bail!("No repository selected"),
+    let Some(target) = selected else {
+        bail!("No repository selected")
     };
 
     let repo = matched
@@ -37,11 +36,11 @@ pub fn run(keyword: &str) -> Result<()> {
     let confirm_name = format!("{}/{}", repo.owner, repo.name);
     let repo_key = repo.display_key();
 
-    eprintln!("Will remove: {}", target);
+    eprintln!("Will remove: {target}");
     eprintln!("This cannot be undone!");
 
     let input: String = Input::new()
-        .with_prompt(format!("Type '{}' to confirm", confirm_name))
+        .with_prompt(format!("Type '{confirm_name}' to confirm"))
         .interact_text()?;
 
     if input != confirm_name {
@@ -66,7 +65,7 @@ pub fn run(keyword: &str) -> Result<()> {
     let hook_cwd = Path::new(&target).parent().unwrap_or(Path::new("/"));
     hook::run_hooks(&config, "post_remove", &repo_key, hook_cwd)?;
 
-    eprintln!("Removed {}", repo_key);
+    eprintln!("Removed {repo_key}");
 
     Ok(())
 }

@@ -45,9 +45,8 @@ pub fn scan(base_dirs: &[PathBuf]) -> Result<Vec<Repo>> {
 fn scan_base(base: &Path, repos: &mut Vec<Repo>) -> Result<()> {
     let base_path = base.to_path_buf();
     // Level 1: host (github.com, gitlab.com, ...)
-    let hosts = match std::fs::read_dir(base) {
-        Ok(entries) => entries,
-        Err(_) => return Ok(()),
+    let Ok(hosts) = std::fs::read_dir(base) else {
+        return Ok(());
     };
     for host_entry in hosts {
         let host_entry = host_entry?;
@@ -60,9 +59,8 @@ fn scan_base(base: &Path, repos: &mut Vec<Repo>) -> Result<()> {
         }
 
         // Level 2: owner
-        let owners = match std::fs::read_dir(host_entry.path()) {
-            Ok(entries) => entries,
-            Err(_) => continue,
+        let Ok(owners) = std::fs::read_dir(host_entry.path()) else {
+            continue;
         };
         for owner_entry in owners {
             let owner_entry = owner_entry?;
@@ -75,9 +73,8 @@ fn scan_base(base: &Path, repos: &mut Vec<Repo>) -> Result<()> {
             }
 
             // Level 3: repo
-            let repo_entries = match std::fs::read_dir(owner_entry.path()) {
-                Ok(entries) => entries,
-                Err(_) => continue,
+            let Ok(repo_entries) = std::fs::read_dir(owner_entry.path()) else {
+                continue;
             };
             for repo_entry in repo_entries {
                 let repo_entry = repo_entry?;

@@ -16,7 +16,7 @@ pub fn run(keyword: Option<&str>) -> Result<()> {
     let matched: Vec<Repo> = if let Some(kw) = keyword {
         let m = repo_source::find(&repos, kw);
         if m.is_empty() {
-            eprintln!("No repository found matching: {}", kw);
+            eprintln!("No repository found matching: {kw}");
             std::process::exit(1);
         }
         m
@@ -67,7 +67,7 @@ fn print_repo_info(repo: &Repo, has_multiple_bases: bool) {
         repo.host.clone()
     };
     let color = BASE_COLORS[0];
-    eprintln!("{} {} {}", color, group_label, RESET);
+    eprintln!("{color} {group_label} {RESET}");
     eprintln!(
         "    {}  {}{}{}",
         repo.short_key(),

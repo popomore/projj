@@ -50,10 +50,10 @@ pub fn run_hooks(config: &Config, event: &str, repo_key: &str, cwd: &Path) -> Re
             host: host.to_string(),
             owner: owner.to_string(),
             name: name.to_string(),
-            git_url: if !host.is_empty() {
-                format!("git@{}:{}/{}.git", host, owner, name)
-            } else {
+            git_url: if host.is_empty() {
                 String::new()
+            } else {
+                format!("git@{host}:{owner}/{name}.git")
             },
         },
     };
@@ -128,10 +128,10 @@ fn run_script(
     Ok(())
 }
 
-/// Check if repo_key matches a matcher regex. None/empty = match all.
+/// Check if `repo_key` matches a matcher regex. None/empty = match all.
 fn matches_repo(matcher: Option<&str>, repo_key: &str) -> bool {
     match matcher {
-        None | Some("") | Some("*") => true,
+        None | Some("" | "*") => true,
         Some(pattern) => regex_lite::Regex::new(pattern)
             .map(|re| re.is_match(repo_key))
             .unwrap_or(false),
