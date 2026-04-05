@@ -226,12 +226,23 @@ command = "notify"
 
 ## External Tools
 
-Projj integrates with these tools via hooks. None are required.
+Projj integrates with these tools when available. **None are required** — projj works fine without them, just with a simpler experience.
 
-| Tool | Integration |
-|------|------------|
-| [zoxide](https://github.com/ajeetdsouza/zoxide) | Built-in `zoxide` hook registers paths on add/init |
-| [fzf](https://github.com/junegunn/fzf) | Interactive selection in `find` and `remove` |
+| Tool | Integration | Without it |
+|------|------------|------------|
+| [fzf](https://github.com/junegunn/fzf) | Fuzzy search, colored groups in `find` / `remove` | Falls back to numbered list |
+| [zoxide](https://github.com/ajeetdsouza/zoxide) | `post_add` hook registers paths for `z` navigation | No auto-registration |
+
+Install (optional):
+
+```bash
+# macOS
+brew install fzf zoxide
+
+# Ubuntu/Debian
+sudo apt install fzf
+curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
+```
 
 ## License
 
