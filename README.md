@@ -1,202 +1,155 @@
 # Projj
 
-Manage repository easily.
-
-[![NPM version][npm-image]][npm-url]
-[![build status][travis-image]][travis-url]
-[![Test coverage][codecov-image]][codecov-url]
-[![David deps][david-image]][david-url]
-[![Known Vulnerabilities][snyk-image]][snyk-url]
-[![npm download][download-image]][download-url]
-
-[npm-image]: https://img.shields.io/npm/v/projj.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/projj
-[travis-image]: https://img.shields.io/travis/popomore/projj.svg?style=flat-square
-[travis-url]: https://travis-ci.org/popomore/projj
-[codecov-image]: https://codecov.io/gh/popomore/projj/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/popomore/projj
-[david-image]: https://img.shields.io/david/popomore/projj.svg?style=flat-square
-[david-url]: https://david-dm.org/popomore/projj
-[snyk-image]: https://snyk.io/test/npm/projj/badge.svg?style=flat-square
-[snyk-url]: https://snyk.io/test/npm/projj
-[download-image]: https://img.shields.io/npm/dm/projj.svg?style=flat-square
-[download-url]: https://npmjs.org/package/projj
+Manage git repositories with directory conventions.
 
 ## Why?
 
-How do you manage git repository?
-
-Maybe you create a directory and clone to it. However if you want to clone repository that has same name? Or Do something in every directory like `clean`?
-
-`Projj` provide a structure making it easy.
+Every git repo gets a predictable home based on its URL:
 
 ```
-$BASE
-|- github.com
-|  `- popomore
-|     `- projj
-`- gitlab.com
-   `- popomore
-      `- projj
+$BASE/
+├── github.com/
+│   └── popomore/
+│       └── projj/
+└── gitlab.com/
+    └── popomore/
+        └── projj/
 ```
 
-And you can `DO` everything in repository by [Hook](#hook).
+No more `~/code/misc/old-projj-backup`. Clone once, find instantly.
 
-## Feature
-
-- ✔︎ Add repository using `projj add`
-- ✔︎ Command Hook
-- ✘ Buildin Hook
-- ✔︎ Custom Hook
-- ✔︎ Run Hook in All Repositories
-- ✔︎ Git Support
-
-## Installation
-
-Install `projj` globally.
+## Install
 
 ```bash
-$ npm i projj -g
+cargo install --path .
 ```
 
-## Usage
-
-### Initialize
+## Quick Start
 
 ```bash
-$ projj init
+# Initialize config
+projj init
+
+# Clone a repo
+projj add popomore/projj
+projj add git@github.com:popomore/projj.git
+
+# Find and jump to a repo
+projj find projj
+
+# List all repos
+projj list
 ```
 
-Set base directory which repositories will be cloned to, default is `~/projj`.
+### Shell Integration
 
-You can change base directory in `~/.projj/config.json`.
-
-### Add Repository
+Add to `~/.zshrc` for quick navigation:
 
 ```bash
-$ projj add git@github.com:popomore/projj.git
+p() {
+  local dir
+  dir=$(projj find "$@")
+  [ -n "$dir" ] && cd "$dir"
+}
 ```
 
-it's just like `git clone`, but the repository will be cached by projj. You can find all repositories in `~/.projj/cache.json`
-
-also support alias which could config at `alias` of `~/.projj/config.json`:
+Then:
 
 ```bash
-$ projj add github://popomore/projj
+p projj       # jump to projj
+p egg         # multiple matches → fzf selection
+p             # browse all repos with fzf
 ```
 
-### Importing
+## Commands
 
-If you have some repositories in `~/code`, projj can import by `projj import ~/code`.
+### projj init
 
-Or projj can import repositories from `cache.json` when you change laptop by `projj import --cache`
+Initialize configuration. Creates `~/.projj/config.toml`.
 
-### Find Repository
+If [zoxide](https://github.com/ajeetdsouza/zoxide) is installed, syncs all existing repos to zoxide.
 
-projj provide a easy way to find the location of your repositories.
+### projj add \<repo\>
+
+Clone a repo into the conventional directory structure.
 
 ```bash
-$ projj find [repo]
+projj add git@github.com:popomore/projj.git    # SSH
+projj add https://github.com/popomore/projj    # HTTPS
+projj add popomore/projj                       # short form (uses default platform)
+projj add ./local/repo                          # move local repo into structure
 ```
 
-You can set `change_directory` in `~/.projj/config.json` to change directory automatically.
+After cloning:
+- Runs `preadd` / `postadd` hooks if configured
+- Registers the path with zoxide (if available)
+- Prints the target path to stdout
 
-### Sync
+### projj find [keyword]
 
-`projj sync` will check the repository in cache.json whether exists, the repository will be removed from cache if not exist.
+Find a repo by keyword. Outputs the path to stdout.
 
-## Hook
+- Single match → prints path directly
+- Multiple matches → opens fzf for selection (falls back to built-in list if fzf is not installed)
+- No keyword → lists all repos for selection
+- Multiple base directories → results are grouped by base with colored labels
 
-Hook is flexible when manage repositories.
+### projj remove \<keyword\>
 
-### Command Hook
+Remove a repo. Requires typing `owner/repo` to confirm.
 
-When run command like `projj add`, hook will be run. `preadd` that run before `projj add`, and `postadd` that run after `projj add`.
+### projj run \<script\> [--all]
 
-Config hook in `~/.projj/config.json`
+Run a script in the current directory, or all repos with `--all`.
 
-```json
-{
-  "hooks": {
-    "postadd": "cat package.json"
-  }
-}
+```bash
+projj run "npm install"          # current directory
+projj run "npm install" --all    # all repos
+projj run postadd                # run a named hook
 ```
 
-Then will show the content of the package of repository.
+If the script name matches a hook in config, runs that hook's command.
 
-**Only support `add` now**
+### projj list
 
-### Define Hook
+List all repo paths, one per line. Pipe-friendly.
 
-You can define own hook.
-
-```json
-{
-  "hooks": {
-    "hook_name": "command"
-  }
-}
+```bash
+projj list | fzf
+projj list | xargs -I{} git -C {} status
 ```
 
-For Example, define a hook to show package.
+## Configuration
 
-```json
-{
-  "hooks": {
-    "show_package": "cat package.json"
-  }
-}
+`~/.projj/config.toml`
+
+```toml
+base = ["/Users/x/projj", "/Users/x/work"]
+platform = "github.com"
+
+[hooks]
+postadd = "npm install"
+preadd = "echo cloning..."
+
+[hooks_config.postadd]
+"github.com" = { name = "popomore", email = "me@example.com" }
 ```
 
-Then you can use `projj run show_package` to run the hook in current directory.
+| Field | Description | Default |
+|-------|-------------|---------|
+| `base` | Root directory (string or array) | `~/projj` |
+| `platform` | Default host for short form `owner/repo` | `github.com` |
+| `hooks` | Hook name → shell command | `{}` |
+| `hooks_config` | Extra config passed via `$PROJJ_HOOK_CONFIG` env | `{}` |
 
-`Command` can be used in `$PATH`, so you can use global node_modules like `npm`.
+## External Tools
 
-```json
-{
-  "hooks": {
-    "npm_install": "npm install"
-  }
-}
-```
+Projj integrates with these tools when available. None are required.
 
-### Write Hook
-
-Write a command
-
-```js
-// clean
-#!/usr/bin/env node
-
-'use strict';
-
-const cp = require('child_process');
-const cwd = process.cwd();
-const config = JSON.parse(process.env.PROJJ_HOOK_CONFIG);
-if (config.node_modules === true) {
-  cp.spawn('rm', [ '-rf', 'node_modules' ]);
-}
-```
-
-You can get `PROJJ_HOOK_CONFIG` from `projj` if you have defined in `~/.projj/config.json`.
-
-```json
-{
-  "hooks": {
-    "clean": "clean"
-  },
-  "clean": {
-    "node_modules": true
-  }
-}
-```
-
-### Run Hook
-
-`projj run clean` in current directory.
-
-`projj runall clean` in every repositories from `cache.json`
+| Tool | Integration |
+|------|------------|
+| [zoxide](https://github.com/ajeetdsouza/zoxide) | `projj add` registers paths; `projj init` syncs all repos |
+| [fzf](https://github.com/junegunn/fzf) | Interactive selection in `find` and `remove` |
 
 ## License
 

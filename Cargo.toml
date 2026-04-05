@@ -1,0 +1,31 @@
+[package]
+name = "projj"
+version = "3.0.0"
+edition = "2024"
+description = "Manage git repositories with directory conventions"
+license = "MIT"
+repository = "https://github.com/popomore/projj"
+homepage = "https://github.com/popomore/projj"
+readme = "README.md"
+keywords = ["git", "repository", "cli", "project", "management"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+clap_complete = "4"
+dialoguer = "0.11"
+dirs = "6"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+regex-lite = "0.1"
+toml = "0.8"
+walkdir = "2"
+
+[dev-dependencies]
+cargo-husky = { version = "1", default-features = false, features = ["precommit-hook", "run-cargo-test", "run-cargo-clippy", "run-cargo-fmt"] }
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"

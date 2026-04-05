@@ -1,7 +1,0 @@
-{
-  "base": "../../tmp",
-  "hooks": {
-    "preadd": "echo preadd",
-    "postadd": "echo postadd"
-  }
-}

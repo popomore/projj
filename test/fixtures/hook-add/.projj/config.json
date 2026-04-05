@@ -1,7 +1,0 @@
-{
-  "base": "../../tmp",
-  "hooks": {
-    "preadd": "hook.js pre",
-    "postadd": "hook.js post"
-  }
-}
