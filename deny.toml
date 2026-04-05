@@ -1,8 +1,8 @@
+[graph]
+targets = []
+
 [advisories]
-vulnerability = "deny"
-unmaintained = "warn"
-yanked = "warn"
-notice = "warn"
+db-path = "~/.cargo/advisory-db"
 
 [licenses]
 allow = [
@@ -11,6 +11,7 @@ allow = [
     "BSD-2-Clause",
     "BSD-3-Clause",
     "ISC",
+    "MPL-2.0",
     "Unicode-3.0",
     "Unicode-DFS-2016",
 ]
