@@ -52,9 +52,9 @@ enum Commands {
     },
     /// List all repositories
     List {
-        /// Force rebuild index
+        /// Output raw paths only (for piping)
         #[arg(long)]
-        rebuild: bool,
+        raw: bool,
     },
     /// Output shell setup (completions + p() function)
     #[command(name = "shell-setup")]
@@ -78,7 +78,7 @@ fn main() -> Result<()> {
             all,
             r#match,
         } => cmd::run::run(&script, all, r#match.as_deref())?,
-        Commands::List { rebuild: _ } => cmd::list::run()?,
+        Commands::List { raw } => cmd::list::run(raw)?,
         Commands::ShellSetup { shell } => {
             // Output completions
             clap_complete::generate(shell, &mut Cli::command(), "projj", &mut std::io::stdout());
