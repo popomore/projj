@@ -29,7 +29,8 @@ impl RepoInfo {
 /// - ./path/to/local/repo                         (local path)
 pub fn parse_repo(input: &str, default_platform: &str) -> Result<RepoInfo> {
     // Local path
-    if input.starts_with('.') || input.starts_with('/') {
+    if input.starts_with('.') || input.starts_with('/') || std::path::Path::new(input).is_absolute()
+    {
         return parse_local_path(input);
     }
 

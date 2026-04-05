@@ -69,6 +69,19 @@ pub fn run_hooks(config: &Config, event: &str, repo_key: &str, cwd: &Path) -> Re
     Ok(())
 }
 
+/// Build a shell command appropriate for the current OS.
+fn shell_command(script: &str) -> Command {
+    if cfg!(windows) {
+        let mut cmd = Command::new("cmd");
+        cmd.args(["/C", script]);
+        cmd
+    } else {
+        let mut cmd = Command::new("sh");
+        cmd.args(["-c", script]);
+        cmd
+    }
+}
+
 /// Run a shell script with env vars and stdin JSON.
 fn run_script(
     script: &str,
@@ -76,8 +89,7 @@ fn run_script(
     stdin_json: &str,
     cwd: &Path,
 ) -> Result<()> {
-    let mut cmd = Command::new("sh");
-    cmd.args(["-c", script]);
+    let mut cmd = shell_command(script);
     cmd.stdin(Stdio::piped());
 
     if cwd.exists() {
@@ -128,8 +140,7 @@ fn matches_repo(matcher: Option<&str>, repo_key: &str) -> bool {
 
 /// Run a raw command (for `projj run`), no hook context.
 pub fn run_command(script: &str, cwd: &Path) -> Result<()> {
-    let mut cmd = Command::new("sh");
-    cmd.args(["-c", script]);
+    let mut cmd = shell_command(script);
 
     if cwd.exists() {
         cmd.current_dir(cwd);

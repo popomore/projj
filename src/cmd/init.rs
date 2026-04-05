@@ -1,7 +1,7 @@
 use anyhow::Result;
 use dialoguer::Input;
 
-use crate::config::{BaseDir, Config, config_exists, config_path, hooks_dir};
+use crate::config::{BaseDir, Config, HookEntry, config_exists, config_path, hooks_dir};
 use crate::hook;
 use crate::repo_source;
 
@@ -28,7 +28,12 @@ pub fn run() -> Result<()> {
             base: BaseDir::Single(base),
             platform,
             scripts: Default::default(),
-            hooks: Default::default(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                command: "zoxide".to_string(),
+                env: Default::default(),
+            }],
         };
         config.save()?;
         eprintln!("Config saved to {}", config_path().display());

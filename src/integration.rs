@@ -5,7 +5,8 @@ use anyhow::Result;
 
 /// Check if a command exists in PATH.
 fn has_command(name: &str) -> bool {
-    Command::new("which")
+    let check = if cfg!(windows) { "where" } else { "which" };
+    Command::new(check)
         .arg(name)
         .stdout(Stdio::null())
         .stderr(Stdio::null())

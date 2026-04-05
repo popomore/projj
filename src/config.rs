@@ -93,8 +93,10 @@ impl Config {
     fn resolve_paths(&mut self) {
         let home = dirs::home_dir().unwrap_or_default();
         let resolve = |s: &str| -> String {
-            if s.starts_with('~') {
-                home.join(&s[2..]).to_string_lossy().to_string()
+            if s == "~" {
+                home.to_string_lossy().to_string()
+            } else if let Some(rest) = s.strip_prefix("~/") {
+                home.join(rest).to_string_lossy().to_string()
             } else if s.starts_with('.') {
                 config_dir().join(s).to_string_lossy().to_string()
             } else {

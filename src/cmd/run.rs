@@ -13,7 +13,13 @@ pub fn run(script: &str, all: bool, match_pattern: Option<&str>) -> Result<()> {
         let repos = repo_source::scan(&config.base_dirs())?;
 
         // Filter by --match if provided
-        let matcher = match_pattern.and_then(|p| regex_lite::Regex::new(p).ok());
+        let matcher = match match_pattern {
+            Some(p) => Some(
+                regex_lite::Regex::new(p)
+                    .map_err(|e| anyhow::anyhow!("Invalid --match pattern '{}': {}", p, e))?,
+            ),
+            None => None,
+        };
         let filtered: Vec<_> = repos
             .iter()
             .filter(|r| {
