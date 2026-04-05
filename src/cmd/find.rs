@@ -131,11 +131,19 @@ fn build_display_items(
             repo.git_url(),
             RESET,
         );
-        path_map.insert(display.clone(), repo.path.clone());
+        // fzf strips ANSI codes from output, so use plain text as map key
+        let plain = strip_ansi(&display);
+        path_map.insert(plain, repo.path.clone());
         items.push(display);
     }
 
     (items, path_map)
+}
+
+/// Strip ANSI escape codes from a string.
+fn strip_ansi(s: &str) -> String {
+    let re = regex_lite::Regex::new(r"\x1b\[[0-9;]*m").unwrap();
+    re.replace_all(s, "").to_string()
 }
 
 fn group_key_for(repo: &Repo, has_multiple_bases: bool) -> String {
