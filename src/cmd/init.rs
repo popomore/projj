@@ -51,15 +51,9 @@ pub fn run() -> Result<()> {
 
     // Shell integration hint
     eprintln!();
-    eprintln!("Tip: add to ~/.zshrc:");
+    eprintln!("Tip: add to ~/.zshrc (or ~/.bashrc):");
     eprintln!();
-    eprintln!("  eval \"$(projj completions zsh)\"");
-    eprintln!();
-    eprintln!("  p() {{");
-    eprintln!("    local dir");
-    eprintln!("    dir=$(projj find \"$@\")");
-    eprintln!("    [ -n \"$dir\" ] && cd \"$dir\"");
-    eprintln!("  }}");
+    eprintln!("  eval \"$(projj shell-setup zsh)\"");
     eprintln!();
 
     Ok(())

@@ -46,18 +46,12 @@ projj list
 
 ### Shell Integration
 
-Add to `~/.zshrc`:
+Add to `~/.zshrc` (or `~/.bashrc`, `~/.config/fish/config.fish`):
 
 ```bash
-# Completions
-eval "$(projj completions zsh)"
-
-# Quick navigation
-p() {
-  local dir
-  dir=$(projj find "$@")
-  [ -n "$dir" ] && cd "$dir"
-}
+eval "$(projj shell-setup zsh)"    # zsh
+eval "$(projj shell-setup bash)"   # bash
+projj shell-setup fish | source    # fish
 ```
 
 Then:

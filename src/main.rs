@@ -56,9 +56,9 @@ enum Commands {
         #[arg(long)]
         rebuild: bool,
     },
-    /// Generate shell completions
-    #[command(hide = true)]
-    Completions {
+    /// Output shell setup (completions + p() function)
+    #[command(name = "shell-setup")]
+    ShellSetup {
         /// Shell type
         #[arg(value_enum)]
         shell: Shell,
@@ -79,8 +79,31 @@ fn main() -> Result<()> {
             r#match,
         } => cmd::run::run(&script, all, r#match.as_deref())?,
         Commands::List { rebuild: _ } => cmd::list::run()?,
-        Commands::Completions { shell } => {
+        Commands::ShellSetup { shell } => {
+            // Output completions
             clap_complete::generate(shell, &mut Cli::command(), "projj", &mut std::io::stdout());
+
+            // Output p() function
+            match shell {
+                Shell::Zsh | Shell::Bash => {
+                    println!();
+                    println!("# projj: quick navigation");
+                    println!("p() {{");
+                    println!("  local dir");
+                    println!("  dir=$(projj find \"$@\")");
+                    println!("  [ -n \"$dir\" ] && cd \"$dir\"");
+                    println!("}}");
+                }
+                Shell::Fish => {
+                    println!();
+                    println!("# projj: quick navigation");
+                    println!("function p");
+                    println!("  set -l dir (projj find $argv)");
+                    println!("  test -n \"$dir\"; and cd $dir");
+                    println!("end");
+                }
+                _ => {}
+            }
         }
     }
 
