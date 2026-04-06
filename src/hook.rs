@@ -156,6 +156,36 @@ pub fn run_command(script: &str, cwd: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Install built-in hook scripts to `~/.projj/hooks/`.
+/// Only writes files that don't already exist.
+pub fn install_builtin_hooks() -> Result<()> {
+    let dir = crate::config::hooks_dir();
+    std::fs::create_dir_all(&dir)?;
+
+    let builtins: &[(&str, &[u8])] = &[
+        ("zoxide", include_bytes!("../hooks/zoxide")),
+        (
+            "git_config_user",
+            include_bytes!("../hooks/git_config_user"),
+        ),
+    ];
+
+    for (name, content) in builtins {
+        let path = dir.join(name);
+        if !path.exists() {
+            std::fs::write(&path, content)?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))?;
+            }
+            eprintln!("Installed hook: {}", path.display());
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;

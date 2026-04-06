@@ -74,6 +74,24 @@ impl Config {
         }
     }
 
+    /// Choose a base directory. Returns directly if only one,
+    /// otherwise prompts user to select via fzf/dialoguer.
+    pub fn choose_base(&self) -> anyhow::Result<PathBuf> {
+        let dirs = self.base_dirs();
+        if dirs.len() == 1 {
+            return Ok(dirs[0].clone());
+        }
+        let choices: Vec<String> = dirs
+            .iter()
+            .map(|p| p.to_string_lossy().to_string())
+            .collect();
+        let selected = crate::search::select_one(&choices, "Choose base directory", None)?;
+        match selected {
+            Some(s) => Ok(PathBuf::from(s)),
+            None => anyhow::bail!("No base directory selected"),
+        }
+    }
+
     /// Resolve a script name with three-level lookup:
     /// 1. `scripts` table in config
     /// 2. Executable file in `~/.projj/hooks/`

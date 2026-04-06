@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::process::Command;
 
 use anyhow::{Result, bail};
 
@@ -16,6 +17,33 @@ impl RepoInfo {
     pub fn rel_path(&self) -> String {
         format!("{}/{}/{}", self.host, self.owner, self.repo)
     }
+}
+
+/// Clone a remote git repository with progress output.
+pub fn clone_remote(url: &str, target: &Path) -> Result<()> {
+    eprintln!("Cloning {url} into {}", target.display());
+    if let Some(parent) = target.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let status = Command::new("git")
+        .args(["clone", "--progress", url, &target.to_string_lossy()])
+        .stdin(std::process::Stdio::null())
+        .status()?;
+    if !status.success() {
+        bail!("git clone failed");
+    }
+    Ok(())
+}
+
+/// Move a local git repository to the target path.
+pub fn move_local(src: &str, target: &Path) -> Result<()> {
+    let src = Path::new(src).canonicalize()?;
+    eprintln!("Moving {} to {}", src.display(), target.display());
+    if let Some(parent) = target.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::rename(&src, target)?;
+    Ok(())
 }
 
 /// Parse a repo argument into `RepoInfo`.

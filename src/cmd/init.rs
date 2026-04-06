@@ -1,9 +1,9 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
 use dialoguer::Input;
 
-use std::collections::HashMap;
-
-use crate::config::{BaseDir, Config, HookEntry, config_exists, config_path, hooks_dir};
+use crate::config::{BaseDir, Config, HookEntry, config_exists, config_path};
 use crate::hook;
 use crate::repo_source;
 
@@ -42,10 +42,8 @@ pub fn run() -> Result<()> {
         config
     };
 
-    // Install built-in hooks if hooks dir doesn't exist
-    install_builtin_hooks()?;
+    hook::install_builtin_hooks()?;
 
-    // Sync existing repos by running post_add hooks for each
     let repos = repo_source::scan(&config.base_dirs())?;
     if !repos.is_empty() {
         eprintln!("Syncing {} repositories...", repos.len());
@@ -56,41 +54,11 @@ pub fn run() -> Result<()> {
         eprintln!("Done.");
     }
 
-    // Shell integration hint
     eprintln!();
     eprintln!("Tip: add to ~/.zshrc (or ~/.bashrc):");
     eprintln!();
     eprintln!("  eval \"$(projj shell-setup zsh)\"");
     eprintln!();
-
-    Ok(())
-}
-
-/// Install built-in hook scripts to ~/.projj/hooks/
-fn install_builtin_hooks() -> Result<()> {
-    let dir = hooks_dir();
-    std::fs::create_dir_all(&dir)?;
-
-    let builtins: &[(&str, &[u8])] = &[
-        ("zoxide", include_bytes!("../../hooks/zoxide")),
-        (
-            "git_config_user",
-            include_bytes!("../../hooks/git_config_user"),
-        ),
-    ];
-
-    for (name, content) in builtins {
-        let path = dir.join(name);
-        if !path.exists() {
-            std::fs::write(&path, content)?;
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::PermissionsExt;
-                std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))?;
-            }
-            eprintln!("Installed hook: {}", path.display());
-        }
-    }
 
     Ok(())
 }
