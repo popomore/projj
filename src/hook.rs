@@ -158,7 +158,10 @@ pub fn run_command(script: &str, cwd: &Path) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use super::*;
+    use crate::config::{Config, HookEntry};
 
     #[test]
     fn test_matches_repo_none() {
@@ -227,5 +230,181 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let result = run_command("false", dir.path());
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_run_command_nonexistent_cwd() {
+        // cwd doesn't exist, command should still run (in current dir)
+        let result = run_command("true", Path::new("/nonexistent"));
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_hooks_no_matching() {
+        let config = Config {
+            base: crate::config::BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: Some("gitlab\\.com".to_string()),
+                command: "echo hi".to_string(),
+                env: HashMap::new(),
+            }],
+        };
+        let dir = tempfile::tempdir().unwrap();
+        // github.com repo won't match gitlab\.com matcher
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_hooks_no_hooks_for_event() {
+        let config = Config {
+            base: crate::config::BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![],
+        };
+        let dir = tempfile::tempdir().unwrap();
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_hooks_matching() {
+        let dir = tempfile::tempdir().unwrap();
+        let marker = dir.path().join("hook_ran");
+        let config = Config {
+            base: crate::config::BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: Some("github\\.com".to_string()),
+                command: format!("touch {}", marker.display()),
+                env: HashMap::new(),
+            }],
+        };
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_ok());
+        assert!(marker.exists());
+    }
+
+    #[test]
+    fn test_run_hooks_with_env() {
+        let dir = tempfile::tempdir().unwrap();
+        let outfile = dir.path().join("env_out");
+        let mut env = HashMap::new();
+        env.insert("MY_VAR".to_string(), "hello".to_string());
+        let config = Config {
+            base: crate::config::BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                command: format!("echo $MY_VAR > {}", outfile.display()),
+                env,
+            }],
+        };
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_ok());
+        let content = std::fs::read_to_string(&outfile).unwrap();
+        assert_eq!(content.trim(), "hello");
+    }
+
+    #[test]
+    fn test_run_hooks_receives_projj_env_vars() {
+        let dir = tempfile::tempdir().unwrap();
+        let outfile = dir.path().join("env_out");
+        let config = Config {
+            base: crate::config::BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                command: format!("echo $PROJJ_REPO_HOST > {}", outfile.display()),
+                env: HashMap::new(),
+            }],
+        };
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_ok());
+        let content = std::fs::read_to_string(&outfile).unwrap();
+        assert_eq!(content.trim(), "github.com");
+    }
+
+    #[test]
+    fn test_run_hooks_with_script_resolve() {
+        let dir = tempfile::tempdir().unwrap();
+        let marker = dir.path().join("script_ran");
+        let mut scripts = HashMap::new();
+        scripts.insert(
+            "myscript".to_string(),
+            format!("touch {}", marker.display()),
+        );
+        let config = Config {
+            base: crate::config::BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts,
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                command: "myscript".to_string(),
+                env: HashMap::new(),
+            }],
+        };
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_ok());
+        assert!(marker.exists());
+    }
+
+    #[test]
+    fn test_run_hooks_simple_repo_key() {
+        // repo_key without host/owner/name format
+        let dir = tempfile::tempdir().unwrap();
+        let config = Config {
+            base: crate::config::BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                command: "true".to_string(),
+                env: HashMap::new(),
+            }],
+        };
+        let result = run_hooks(&config, "post_add", "simple-key", dir.path());
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_hooks_hook_failure() {
+        let dir = tempfile::tempdir().unwrap();
+        let config = Config {
+            base: crate::config::BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                command: "false".to_string(),
+                env: HashMap::new(),
+            }],
+        };
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_shell_command() {
+        let cmd = shell_command("echo hi");
+        let program = cmd.get_program().to_string_lossy().to_string();
+        if cfg!(windows) {
+            assert_eq!(program, "cmd");
+        } else {
+            assert_eq!(program, "sh");
+        }
     }
 }

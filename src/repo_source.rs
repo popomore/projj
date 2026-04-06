@@ -261,4 +261,50 @@ mod tests {
         let repos = scan(&[dir1.path().to_path_buf(), dir2.path().to_path_buf()]).unwrap();
         assert_eq!(repos.len(), 2);
     }
+
+    #[test]
+    fn test_scan_skips_files_at_host_level() {
+        let dir = tempfile::tempdir().unwrap();
+        // A file where a host dir should be
+        std::fs::write(dir.path().join("not-a-dir"), "").unwrap();
+        std::fs::create_dir_all(dir.path().join("github.com/owner/repo/.git")).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        assert_eq!(repos.len(), 1);
+    }
+
+    #[test]
+    fn test_scan_skips_files_at_owner_level() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("github.com")).unwrap();
+        std::fs::write(dir.path().join("github.com/not-a-dir"), "").unwrap();
+        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        assert!(repos.is_empty());
+    }
+
+    #[test]
+    fn test_scan_skips_files_at_repo_level() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("github.com/owner")).unwrap();
+        std::fs::write(dir.path().join("github.com/owner/not-a-dir"), "").unwrap();
+        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        assert!(repos.is_empty());
+    }
+
+    #[test]
+    fn test_scan_sorted_output() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("github.com/z/repo/.git")).unwrap();
+        std::fs::create_dir_all(dir.path().join("github.com/a/repo/.git")).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        assert_eq!(repos.len(), 2);
+        assert!(repos[0].path < repos[1].path);
+    }
+
+    #[test]
+    fn test_scan_sets_base_field() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("github.com/owner/repo/.git")).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        assert_eq!(repos[0].base, dir.path());
+    }
 }

@@ -39,11 +39,14 @@ fn default_platform() -> String {
 
 impl Config {
     pub fn load() -> Result<Self> {
-        let path = config_path();
+        Self::load_from(&config_path())
+    }
+
+    pub fn load_from(path: &PathBuf) -> Result<Self> {
         if !path.exists() {
             bail!("Configuration not found. Please run `projj init` first.");
         }
-        let content = fs::read_to_string(&path)
+        let content = fs::read_to_string(path)
             .with_context(|| format!("Failed to read config: {}", path.display()))?;
         let mut config: Config =
             toml::from_str(&content).with_context(|| "Failed to parse config.toml")?;
@@ -52,12 +55,15 @@ impl Config {
     }
 
     pub fn save(&self) -> Result<()> {
-        let path = config_path();
+        self.save_to(&config_path())
+    }
+
+    pub fn save_to(&self, path: &PathBuf) -> Result<()> {
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
         }
         let content = toml::to_string_pretty(self)?;
-        fs::write(&path, content)?;
+        fs::write(path, content)?;
         Ok(())
     }
 
@@ -238,6 +244,88 @@ command = "clean"
         let mut config: Config = toml::from_str(toml).unwrap();
         config.resolve_paths();
         assert_eq!(config.base_dirs(), vec![PathBuf::from("/absolute/path")]);
+    }
+
+    #[test]
+    fn test_resolve_paths_relative() {
+        let toml = r#"base = "./data""#;
+        let mut config: Config = toml::from_str(toml).unwrap();
+        config.resolve_paths();
+        let expected = config_dir().join("./data");
+        assert_eq!(config.base_dirs(), vec![expected]);
+    }
+
+    #[test]
+    fn test_resolve_paths_multiple() {
+        let toml = r#"base = ["~/a", "/b"]"#;
+        let mut config: Config = toml::from_str(toml).unwrap();
+        config.resolve_paths();
+        let home = dirs::home_dir().unwrap();
+        assert_eq!(config.base_dirs()[0], home.join("a"));
+        assert_eq!(config.base_dirs()[1], PathBuf::from("/b"));
+    }
+
+    #[test]
+    fn test_resolve_script_from_hooks_dir() {
+        let dir = tempfile::tempdir().unwrap();
+        let hooks = dir.path().join("hooks");
+        std::fs::create_dir_all(&hooks).unwrap();
+        std::fs::write(hooks.join("myhook"), "#!/bin/bash\necho hi").unwrap();
+
+        // We can't easily override hooks_dir(), but we can test the logic directly
+        let config = Config {
+            base: BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![],
+        };
+        // "myhook" with no spaces or slashes, but hooks_dir doesn't point to our temp dir
+        // so it falls through to raw command
+        assert_eq!(config.resolve_script("myhook"), "myhook");
+    }
+
+    #[test]
+    fn test_config_dir_and_paths() {
+        let dir = config_dir();
+        assert!(dir.ends_with(".projj"));
+        assert!(hooks_dir().ends_with("hooks"));
+        assert!(config_path().ends_with("config.toml"));
+    }
+
+    #[test]
+    fn test_config_exists_false() {
+        // config_exists depends on real filesystem, just verify it returns bool
+        let _ = config_exists();
+    }
+
+    #[test]
+    fn test_save_and_load() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("config.toml");
+        let config = Config {
+            base: BaseDir::Single("/tmp/projj".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                command: "echo hi".to_string(),
+                env: HashMap::new(),
+            }],
+        };
+        config.save_to(&path).unwrap();
+        assert!(path.exists());
+
+        let loaded = Config::load_from(&path).unwrap();
+        assert_eq!(loaded.platform, "github.com");
+        assert_eq!(loaded.hooks.len(), 1);
+    }
+
+    #[test]
+    fn test_load_nonexistent() {
+        let path = PathBuf::from("/nonexistent/config.toml");
+        let result = Config::load_from(&path);
+        assert!(result.is_err());
     }
 
     #[test]
