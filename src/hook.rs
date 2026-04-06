@@ -1,10 +1,12 @@
 use std::io::Write;
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 use anyhow::{Result, bail};
 
+use crate::color::{DIM, RESET, color};
 use crate::config::{Config, HookEntry};
+use crate::task;
 
 /// Repo context passed to hooks via stdin JSON and env vars.
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -61,25 +63,16 @@ pub fn run_hooks(config: &Config, event: &str, repo_key: &str, cwd: &Path) -> Re
     let stdin_json = serde_json::to_string(&context)?;
 
     for hook in matching {
-        let script = config.resolve_script(&hook.command);
-        eprintln!("  hook [{}] {}", event, &script);
-        run_script(&script, &hook.env, &stdin_json, cwd)?;
+        let d = color(DIM);
+        let r = color(RESET);
+        for cmd in &hook.tasks {
+            let script = task::resolve(config, cmd);
+            eprintln!("  {d}🪝 [{event}] \"{cmd}\"{r}");
+            run_script(&script, &hook.env, &stdin_json, cwd)?;
+        }
     }
 
     Ok(())
-}
-
-/// Build a shell command appropriate for the current OS.
-fn shell_command(script: &str) -> Command {
-    if cfg!(windows) {
-        let mut cmd = Command::new("cmd");
-        cmd.args(["/C", script]);
-        cmd
-    } else {
-        let mut cmd = Command::new("sh");
-        cmd.args(["-c", script]);
-        cmd
-    }
 }
 
 /// Run a shell script with env vars and stdin JSON.
@@ -89,7 +82,7 @@ fn run_script(
     stdin_json: &str,
     cwd: &Path,
 ) -> Result<()> {
-    let mut cmd = shell_command(script);
+    let mut cmd = task::shell_command(script);
     cmd.stdin(Stdio::piped());
 
     if cwd.exists() {
@@ -136,54 +129,6 @@ fn matches_repo(matcher: Option<&str>, repo_key: &str) -> bool {
             .map(|re| re.is_match(repo_key))
             .unwrap_or(false),
     }
-}
-
-/// Run a raw command (for `projj run`), no hook context.
-pub fn run_command(script: &str, cwd: &Path) -> Result<()> {
-    let mut cmd = shell_command(script);
-
-    if cwd.exists() {
-        cmd.current_dir(cwd);
-    }
-
-    let status = cmd.status()?;
-    if !status.success() {
-        bail!(
-            "Command failed with exit code: {}",
-            status.code().unwrap_or(-1)
-        );
-    }
-    Ok(())
-}
-
-/// Install built-in hook scripts to `~/.projj/hooks/`.
-/// Only writes files that don't already exist.
-pub fn install_builtin_hooks() -> Result<()> {
-    let dir = crate::config::hooks_dir();
-    std::fs::create_dir_all(&dir)?;
-
-    let builtins: &[(&str, &[u8])] = &[
-        ("zoxide", include_bytes!("../hooks/zoxide")),
-        (
-            "git_config_user",
-            include_bytes!("../hooks/git_config_user"),
-        ),
-    ];
-
-    for (name, content) in builtins {
-        let path = dir.join(name);
-        if !path.exists() {
-            std::fs::write(&path, content)?;
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::PermissionsExt;
-                std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))?;
-            }
-            eprintln!("Installed hook: {}", path.display());
-        }
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]
@@ -249,36 +194,15 @@ mod tests {
     }
 
     #[test]
-    fn test_run_command_success() {
-        let dir = tempfile::tempdir().unwrap();
-        let result = run_command("true", dir.path());
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_run_command_failure() {
-        let dir = tempfile::tempdir().unwrap();
-        let result = run_command("false", dir.path());
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_run_command_nonexistent_cwd() {
-        // cwd doesn't exist, command should still run (in current dir)
-        let result = run_command("true", Path::new("/nonexistent"));
-        assert!(result.is_ok());
-    }
-
-    #[test]
     fn test_run_hooks_no_matching() {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
                 matcher: Some("gitlab\\.com".to_string()),
-                command: "echo hi".to_string(),
+                tasks: vec!["echo hi".to_string()],
                 env: HashMap::new(),
             }],
         };
@@ -293,7 +217,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![],
         };
         let dir = tempfile::tempdir().unwrap();
@@ -308,11 +232,11 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
                 matcher: Some("github\\.com".to_string()),
-                command: format!("touch {}", marker.display()),
+                tasks: vec![format!("touch {}", marker.display())],
                 env: HashMap::new(),
             }],
         };
@@ -331,11 +255,11 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
                 matcher: None,
-                command: format!("echo $MY_VAR > {}", outfile.display()),
+                tasks: vec![format!("echo $MY_VAR > {}", outfile.display())],
                 env,
             }],
         };
@@ -355,11 +279,11 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("C:\\tmp".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
                 matcher: None,
-                command: format!("echo %MY_VAR% > {}", outfile.display()),
+                tasks: vec![format!("echo %MY_VAR% > {}", outfile.display())],
                 env,
             }],
         };
@@ -377,11 +301,11 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
                 matcher: None,
-                command: format!("echo $PROJJ_REPO_HOST > {}", outfile.display()),
+                tasks: vec![format!("echo $PROJJ_REPO_HOST > {}", outfile.display())],
                 env: HashMap::new(),
             }],
         };
@@ -399,11 +323,11 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("C:\\tmp".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
                 matcher: None,
-                command: format!("echo %PROJJ_REPO_HOST% > {}", outfile.display()),
+                tasks: vec![format!("echo %PROJJ_REPO_HOST% > {}", outfile.display())],
                 env: HashMap::new(),
             }],
         };
@@ -414,22 +338,22 @@ mod tests {
     }
 
     #[test]
-    fn test_run_hooks_with_script_resolve() {
+    fn test_run_hooks_with_task_resolve() {
         let dir = tempfile::tempdir().unwrap();
         let marker = dir.path().join("script_ran");
-        let mut scripts = HashMap::new();
-        scripts.insert(
+        let mut tasks = HashMap::new();
+        tasks.insert(
             "myscript".to_string(),
             format!("touch {}", marker.display()),
         );
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
-            scripts,
+            tasks,
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
                 matcher: None,
-                command: "myscript".to_string(),
+                tasks: vec!["myscript".to_string()],
                 env: HashMap::new(),
             }],
         };
@@ -445,11 +369,11 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
                 matcher: None,
-                command: "true".to_string(),
+                tasks: vec!["true".to_string()],
                 env: HashMap::new(),
             }],
         };
@@ -463,11 +387,11 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
                 matcher: None,
-                command: "false".to_string(),
+                tasks: vec!["false".to_string()],
                 env: HashMap::new(),
             }],
         };
@@ -476,13 +400,68 @@ mod tests {
     }
 
     #[test]
-    fn test_shell_command() {
-        let cmd = shell_command("echo hi");
-        let program = cmd.get_program().to_string_lossy().to_string();
-        if cfg!(windows) {
-            assert_eq!(program, "cmd");
-        } else {
-            assert_eq!(program, "sh");
-        }
+    fn test_run_hooks_multiple_tasks() {
+        let dir = tempfile::tempdir().unwrap();
+        let marker1 = dir.path().join("task1_ran");
+        let marker2 = dir.path().join("task2_ran");
+        let config = Config {
+            base: crate::config::BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            tasks: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                tasks: vec![
+                    format!("touch {}", marker1.display()),
+                    format!("touch {}", marker2.display()),
+                ],
+                env: HashMap::new(),
+            }],
+        };
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_ok());
+        assert!(marker1.exists(), "first task should have run");
+        assert!(marker2.exists(), "second task should have run");
+    }
+
+    #[test]
+    fn test_run_hooks_multiple_tasks_stops_on_failure() {
+        let dir = tempfile::tempdir().unwrap();
+        let marker = dir.path().join("should_not_run");
+        let config = Config {
+            base: crate::config::BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            tasks: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                tasks: vec!["false".to_string(), format!("touch {}", marker.display())],
+                env: HashMap::new(),
+            }],
+        };
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_err());
+        assert!(
+            !marker.exists(),
+            "second task should NOT run after first fails"
+        );
+    }
+
+    #[test]
+    fn test_run_hooks_empty_tasks() {
+        let dir = tempfile::tempdir().unwrap();
+        let config = Config {
+            base: crate::config::BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            tasks: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                tasks: vec![],
+                env: HashMap::new(),
+            }],
+        };
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_ok());
     }
 }

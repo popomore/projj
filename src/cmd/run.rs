@@ -1,13 +1,18 @@
 use anyhow::Result;
 
+use crate::color::{DIM, RESET, color};
 use crate::config::Config;
-use crate::hook;
 use crate::repo_source;
+use crate::task;
 
-pub fn run(script: &str, all: bool, match_pattern: Option<&str>) -> Result<()> {
+pub fn run(script: &str, all: bool, match_pattern: Option<&str>, args: &[String]) -> Result<()> {
     let config = Config::load()?;
-    let resolved_owned = config.resolve_script(script);
-    let resolved = resolved_owned.as_str();
+    let resolved_owned = task::resolve(&config, script);
+    let resolved = if args.is_empty() {
+        resolved_owned
+    } else {
+        format!("{} {}", resolved_owned, args.join(" "))
+    };
 
     if all {
         let repos = repo_source::scan(&config.base_dirs())?;
@@ -31,14 +36,16 @@ pub fn run(script: &str, all: bool, match_pattern: Option<&str>) -> Result<()> {
 
         let total = filtered.len();
         for (i, repo) in filtered.iter().enumerate() {
-            eprintln!("[{}/{}] {}", i + 1, total, repo.display_key());
-            if let Err(e) = hook::run_command(resolved, &repo.path) {
-                eprintln!("  Error: {e}");
+            let d = color(DIM);
+            let r = color(RESET);
+            eprintln!("{d}[{}/{}]{r} 📦 {}", i + 1, total, repo.display_key());
+            if let Err(e) = task::run(&resolved, &repo.path) {
+                eprintln!("  ❌ {e}");
             }
         }
     } else {
         let cwd = std::env::current_dir()?;
-        hook::run_command(resolved, &cwd)?;
+        task::run(&resolved, &cwd)?;
     }
 
     Ok(())
