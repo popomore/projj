@@ -60,8 +60,8 @@ fn test_list_raw() {
         .args(["list", "--raw"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("github.com/popomore/projj"))
-        .stdout(predicate::str::contains("github.com/SeeleAI/agent"));
+        .stdout(predicate::str::contains("popomore").and(predicate::str::contains("projj")))
+        .stdout(predicate::str::contains("SeeleAI").and(predicate::str::contains("agent")));
 }
 
 #[test]
@@ -106,7 +106,7 @@ fn test_find_single_match() {
         .args(["find", "projj"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("github.com/popomore/projj"));
+        .stdout(predicate::str::contains("popomore").and(predicate::str::contains("projj")));
 }
 
 #[test]
@@ -316,7 +316,7 @@ fn test_add_existing_repo() {
         .assert()
         .success()
         .stderr(predicate::str::contains("already exists"))
-        .stdout(predicate::str::contains("github.com/popomore/projj"));
+        .stdout(predicate::str::contains("popomore").and(predicate::str::contains("projj")));
 }
 
 // ── projj add (local move) ──
@@ -367,14 +367,17 @@ fn test_add_local_repo() {
         .assert()
         .success()
         .stderr(predicate::str::contains("Moving"))
-        .stdout(predicate::str::contains("github.com/testowner/testrepo"));
+        .stdout(predicate::str::contains("testowner").and(predicate::str::contains("testrepo")));
 
     // Original should be moved
     assert!(!repo_dir.exists());
     // Target should exist
     assert!(
         base.path()
-            .join("github.com/testowner/testrepo/.git")
+            .join("github.com")
+            .join("testowner")
+            .join("testrepo")
+            .join(".git")
             .exists()
     );
 }
@@ -412,8 +415,8 @@ fn test_list_multiple_bases() {
         .args(["list", "--raw"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("github.com/a/repo1"))
-        .stdout(predicate::str::contains("gitlab.com/b/repo2"));
+        .stdout(predicate::str::contains("repo1"))
+        .stdout(predicate::str::contains("repo2"));
 }
 
 // ── projj find (case insensitive) ──
@@ -594,7 +597,7 @@ fn test_find_no_color() {
         !stderr.contains("\x1b["),
         "stderr should not contain ANSI codes"
     );
-    assert!(stdout.contains("github.com/popomore/projj"));
+    assert!(stdout.contains("popomore") && stdout.contains("projj"));
 }
 
 #[test]

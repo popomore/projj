@@ -81,7 +81,14 @@ fn test_remove_confirm() {
     p.exp_string("Removed").unwrap();
     p.exp_eof().unwrap();
 
-    assert!(!base.path().join("github.com/testowner/testrepo").exists());
+    assert!(
+        !base
+            .path()
+            .join("github.com")
+            .join("testowner")
+            .join("testrepo")
+            .exists()
+    );
 }
 
 #[test]
@@ -98,5 +105,11 @@ fn test_remove_wrong_name() {
     p.exp_string("Cancelled").unwrap();
     p.exp_eof().unwrap();
 
-    assert!(base.path().join("github.com/testowner/testrepo").exists());
+    assert!(
+        base.path()
+            .join("github.com")
+            .join("testowner")
+            .join("testrepo")
+            .exists()
+    );
 }
