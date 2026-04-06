@@ -11,7 +11,7 @@ pub struct Config {
     #[serde(default = "default_platform")]
     pub platform: String,
     #[serde(default)]
-    pub scripts: HashMap<String, String>,
+    pub tasks: HashMap<String, String>,
     #[serde(default)]
     pub hooks: Vec<HookEntry>,
 }
@@ -21,7 +21,9 @@ pub struct HookEntry {
     pub event: String,
     #[serde(default)]
     pub matcher: Option<String>,
-    pub command: String,
+    /// Tasks to execute in order. Each can be a task name or raw command.
+    #[serde(default)]
+    pub tasks: Vec<String>,
     #[serde(default)]
     pub env: HashMap<String, String>,
 }
@@ -74,28 +76,6 @@ impl Config {
         }
     }
 
-    /// Resolve a script name with three-level lookup:
-    /// 1. `scripts` table in config
-    /// 2. Executable file in `~/.projj/hooks/`
-    /// 3. Raw command as-is
-    pub fn resolve_script(&self, name: &str) -> String {
-        // 1. Scripts table
-        if let Some(script) = self.scripts.get(name) {
-            return script.clone();
-        }
-
-        // 2. ~/.projj/hooks/ directory (only for simple names without spaces/slashes)
-        if !name.contains(' ') && !name.contains('/') {
-            let hook_path = hooks_dir().join(name);
-            if hook_path.exists() {
-                return hook_path.to_string_lossy().to_string();
-            }
-        }
-
-        // 3. Raw command
-        name.to_string()
-    }
-
     fn resolve_paths(&mut self) {
         let home = dirs::home_dir().unwrap_or_default();
         let resolve = |s: &str| -> String {
@@ -130,10 +110,6 @@ pub fn config_dir() -> PathBuf {
         .join(".projj")
 }
 
-pub fn hooks_dir() -> PathBuf {
-    config_dir().join("hooks")
-}
-
 pub fn config_path() -> PathBuf {
     config_dir().join("config.toml")
 }
@@ -151,7 +127,7 @@ mod tests {
         let toml = r#"base = "/tmp/projj""#;
         let config: Config = toml::from_str(toml).unwrap();
         assert_eq!(config.platform, "github.com");
-        assert!(config.scripts.is_empty());
+        assert!(config.tasks.is_empty());
         assert!(config.hooks.is_empty());
     }
 
@@ -161,18 +137,18 @@ mod tests {
 base = ["/tmp/a", "/tmp/b"]
 platform = "gitlab.com"
 
-[scripts]
+[tasks]
 clean = "rm -rf node_modules"
 
 [[hooks]]
 event = "post_add"
 matcher = "github\\.com"
-command = "clean"
+tasks = ["clean"]
 "#;
         let config: Config = toml::from_str(toml).unwrap();
         assert_eq!(config.platform, "gitlab.com");
         assert_eq!(config.base_dirs().len(), 2);
-        assert_eq!(config.scripts["clean"], "rm -rf node_modules");
+        assert_eq!(config.tasks["clean"], "rm -rf node_modules");
         assert_eq!(config.hooks.len(), 1);
         assert_eq!(config.hooks[0].event, "post_add");
         assert_eq!(config.hooks[0].matcher.as_deref(), Some("github\\.com"));
@@ -183,7 +159,7 @@ command = "clean"
         let config = Config {
             base: BaseDir::Single("/tmp/projj".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![],
         };
         assert_eq!(config.base_dirs(), vec![PathBuf::from("/tmp/projj")]);
@@ -194,34 +170,10 @@ command = "clean"
         let config = Config {
             base: BaseDir::Multiple(vec!["/tmp/a".to_string(), "/tmp/b".to_string()]),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![],
         };
         assert_eq!(config.base_dirs().len(), 2);
-    }
-
-    #[test]
-    fn test_resolve_script_from_table() {
-        let mut scripts = HashMap::new();
-        scripts.insert("clean".to_string(), "rm -rf node_modules".to_string());
-        let config = Config {
-            base: BaseDir::Single("/tmp".to_string()),
-            platform: "github.com".to_string(),
-            scripts,
-            hooks: vec![],
-        };
-        assert_eq!(config.resolve_script("clean"), "rm -rf node_modules");
-    }
-
-    #[test]
-    fn test_resolve_script_raw_command() {
-        let config = Config {
-            base: BaseDir::Single("/tmp".to_string()),
-            platform: "github.com".to_string(),
-            scripts: HashMap::new(),
-            hooks: vec![],
-        };
-        assert_eq!(config.resolve_script("git status"), "git status");
     }
 
     #[test]
@@ -270,29 +222,9 @@ command = "clean"
     }
 
     #[test]
-    fn test_resolve_script_from_hooks_dir() {
-        let dir = tempfile::tempdir().unwrap();
-        let hooks = dir.path().join("hooks");
-        std::fs::create_dir_all(&hooks).unwrap();
-        std::fs::write(hooks.join("myhook"), "#!/bin/bash\necho hi").unwrap();
-
-        // We can't easily override hooks_dir(), but we can test the logic directly
-        let config = Config {
-            base: BaseDir::Single("/tmp".to_string()),
-            platform: "github.com".to_string(),
-            scripts: HashMap::new(),
-            hooks: vec![],
-        };
-        // "myhook" with no spaces or slashes, but hooks_dir doesn't point to our temp dir
-        // so it falls through to raw command
-        assert_eq!(config.resolve_script("myhook"), "myhook");
-    }
-
-    #[test]
     fn test_config_dir_and_paths() {
         let dir = config_dir();
         assert!(dir.ends_with(".projj"));
-        assert!(hooks_dir().ends_with("hooks"));
         assert!(config_path().ends_with("config.toml"));
     }
 
@@ -309,11 +241,11 @@ command = "clean"
         let config = Config {
             base: BaseDir::Single("/tmp/projj".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
                 matcher: None,
-                command: "echo hi".to_string(),
+                tasks: vec!["echo hi".to_string()],
                 env: HashMap::new(),
             }],
         };
@@ -339,7 +271,7 @@ base = "/tmp"
 
 [[hooks]]
 event = "post_add"
-command = "test"
+tasks = ["test"]
 env = { NAME = "value" }
 "#;
         let config: Config = toml::from_str(toml).unwrap();

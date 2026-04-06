@@ -34,9 +34,7 @@ pub fn run(repo_arg: &str) -> Result<()> {
     let repo_key = info.rel_path();
 
     if target.exists() {
-        eprintln!("{} already exists", target.display());
-        hook::run_hooks(&config, "post_add", &repo_key, &target)?;
-        println!("{}", target.display());
+        eprintln!("📁 {} already exists", target.display());
         return Ok(());
     }
 
@@ -52,8 +50,7 @@ pub fn run(repo_arg: &str) -> Result<()> {
 
     hook::run_hooks(&config, "post_add", &repo_key, &target)?;
 
-    eprintln!("Added {}", info.rel_path());
-    println!("{}", target.display());
+    eprintln!("✅ Added {}", info.rel_path());
 
     Ok(())
 }
@@ -69,7 +66,7 @@ mod tests {
         let config = Config {
             base: BaseDir::Single("/tmp/projj".to_string()),
             platform: "github.com".to_string(),
-            scripts: HashMap::new(),
+            tasks: HashMap::new(),
             hooks: vec![],
         };
         let base = choose_base(&config).unwrap();

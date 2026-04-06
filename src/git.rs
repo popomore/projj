@@ -19,16 +19,44 @@ impl RepoInfo {
     }
 }
 
-/// Clone a remote git repository with progress output.
+/// Clone a remote git repository with progress output (indented).
 pub fn clone_remote(url: &str, target: &Path) -> Result<()> {
-    eprintln!("Cloning {url} into {}", target.display());
+    eprintln!("📥 Cloning {url}");
     if let Some(parent) = target.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    let status = Command::new("git")
+    let mut child = Command::new("git")
         .args(["clone", "--progress", url, &target.to_string_lossy()])
         .stdin(std::process::Stdio::null())
-        .status()?;
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::piped())
+        .spawn()?;
+
+    // Read stderr, add indent after each \r or \n
+    if let Some(stderr) = child.stderr.take() {
+        use std::io::{BufReader, Read};
+        let mut reader = BufReader::new(stderr);
+        let mut buf = [0u8; 256];
+        let mut at_line_start = true;
+        loop {
+            let n = reader.read(&mut buf)?;
+            if n == 0 {
+                break;
+            }
+            for &b in &buf[..n] {
+                if at_line_start {
+                    eprint!("   ");
+                    at_line_start = false;
+                }
+                eprint!("{}", b as char);
+                if b == b'\r' || b == b'\n' {
+                    at_line_start = true;
+                }
+            }
+        }
+    }
+
+    let status = child.wait()?;
     if !status.success() {
         bail!("git clone failed");
     }
@@ -38,7 +66,7 @@ pub fn clone_remote(url: &str, target: &Path) -> Result<()> {
 /// Move a local git repository to the target path.
 pub fn move_local(src: &str, target: &Path) -> Result<()> {
     let src = Path::new(src).canonicalize()?;
-    eprintln!("Moving {} to {}", src.display(), target.display());
+    eprintln!("📦 Moving {} to {}", src.display(), target.display());
     if let Some(parent) = target.parent() {
         std::fs::create_dir_all(parent)?;
     }

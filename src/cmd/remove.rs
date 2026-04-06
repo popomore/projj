@@ -36,15 +36,15 @@ pub fn run(keyword: &str) -> Result<()> {
     let confirm_name = format!("{}/{}", repo.owner, repo.name);
     let repo_key = repo.display_key();
 
-    eprintln!("Will remove: {target}");
-    eprintln!("This cannot be undone!");
+    eprintln!("🗑️  Will remove: {target}");
+    eprintln!("⚠️  This cannot be undone!");
 
     let input: String = Input::new()
         .with_prompt(format!("Type '{confirm_name}' to confirm"))
         .interact_text()?;
 
     if input != confirm_name {
-        eprintln!("Cancelled.");
+        eprintln!("❌ Cancelled.");
         return Ok(());
     }
 
@@ -65,7 +65,7 @@ pub fn run(keyword: &str) -> Result<()> {
     let hook_cwd = Path::new(&target).parent().unwrap_or(Path::new("/"));
     hook::run_hooks(&config, "post_remove", &repo_key, hook_cwd)?;
 
-    eprintln!("Removed {repo_key}");
+    eprintln!("✅ Removed {repo_key}");
 
     Ok(())
 }

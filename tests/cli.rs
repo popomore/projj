@@ -23,12 +23,12 @@ fn setup_config(base_dir: &std::path::Path) -> TempDir {
         r#"base = "{}"
 platform = "github.com"
 
-[scripts]
+[tasks]
 hello = "echo hello"
 
 [[hooks]]
 event = "post_add"
-command = "true"
+tasks = ["true"]
 "#,
         toml_path(base_dir)
     );
@@ -159,7 +159,7 @@ fn test_run_named_script() {
     let projj_dir = home.path().join(".projj");
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
-        "base = \"{}\"\nplatform = \"github.com\"\n\n[scripts]\nhello = \"echo from-script\"\n",
+        "base = \"{}\"\nplatform = \"github.com\"\n\n[tasks]\nhello = \"echo from-script\"\n",
         toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
@@ -320,8 +320,7 @@ fn test_add_existing_repo() {
         .args(["add", "popomore/projj"])
         .assert()
         .success()
-        .stderr(predicate::str::contains("already exists"))
-        .stdout(predicate::str::contains("popomore").and(predicate::str::contains("projj")));
+        .stderr(predicate::str::contains("already exists"));
 }
 
 // ── projj add (local move) ──
@@ -373,7 +372,7 @@ fn test_add_local_repo() {
         .assert()
         .success()
         .stderr(predicate::str::contains("Moving"))
-        .stdout(predicate::str::contains("testowner").and(predicate::str::contains("testrepo")));
+        .stderr(predicate::str::contains("Added"));
 
     // Original should be moved
     assert!(!repo_dir.exists());
@@ -451,63 +450,43 @@ fn test_find_case_insensitive() {
 // ── projj add with hooks ──
 
 #[test]
-fn test_add_existing_with_post_add_hook() {
+fn test_add_existing_skips_hooks() {
     let base = tempfile::tempdir().unwrap();
     create_repo(base.path(), "github.com", "popomore", "projj");
 
     let home = tempfile::tempdir().unwrap();
     let projj_dir = home.path().join(".projj");
     fs::create_dir_all(&projj_dir).unwrap();
-
-    let marker = base.path().join("hook_ran");
-    let marker_path = toml_path(&marker);
-    let hook_cmd = if cfg!(windows) {
-        format!("echo. > {marker_path}")
-    } else {
-        format!("touch {marker_path}")
-    };
     let config_content = format!(
-        r#"base = "{}"
-platform = "github.com"
-
-[[hooks]]
-event = "post_add"
-command = "{hook_cmd}"
-"#,
-        toml_path(base.path()),
+        "base = \"{}\"\nplatform = \"github.com\"\n",
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
     projj_cmd(home.path())
         .args(["add", "popomore/projj"])
         .assert()
-        .success();
-
-    assert!(marker.exists(), "post_add hook should have run");
+        .success()
+        .stderr(predicate::str::contains("already exists"));
 }
 
 // ── projj run with hooks dir ──
 
 #[cfg(unix)]
 #[test]
-fn test_run_from_hooks_dir() {
+fn test_run_from_tasks_dir() {
     let home = tempfile::tempdir().unwrap();
     let projj_dir = home.path().join(".projj");
-    let hooks_dir = projj_dir.join("hooks");
-    fs::create_dir_all(&hooks_dir).unwrap();
+    let tasks_dir = projj_dir.join("tasks");
+    fs::create_dir_all(&tasks_dir).unwrap();
 
-    // Create a hook script (platform-specific)
-    if cfg!(windows) {
-        let script_path = hooks_dir.join("greet.bat");
-        fs::write(&script_path, "@echo off\necho hello-from-hook").unwrap();
-    } else {
-        let script_path = hooks_dir.join("greet");
-        fs::write(&script_path, "#!/bin/bash\necho hello-from-hook").unwrap();
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            fs::set_permissions(&script_path, fs::Permissions::from_mode(0o755)).unwrap();
-        }
+    // Create a task script
+    let script_path = tasks_dir.join("greet");
+    fs::write(&script_path, "#!/bin/bash\necho hello-from-hook").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&script_path, fs::Permissions::from_mode(0o755)).unwrap();
     }
 
     let config_content = "base = \"/tmp\"\nplatform = \"github.com\"\n";

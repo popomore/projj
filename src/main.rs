@@ -5,6 +5,7 @@ mod git;
 mod hook;
 mod repo_source;
 mod select;
+mod task;
 
 use anyhow::Result;
 use clap::{CommandFactory, Parser, Subcommand};
@@ -50,6 +51,9 @@ enum Commands {
         /// Regex to filter repositories (with --all)
         #[arg(long, value_name = "PATTERN")]
         r#match: Option<String>,
+        /// Extra arguments passed to the script (after --)
+        #[arg(last = true)]
+        args: Vec<String>,
     },
     /// List all repositories
     List {
@@ -58,7 +62,7 @@ enum Commands {
         raw: bool,
     },
     /// Output shell setup (completions + `p()` function)
-    #[command(name = "shell-setup")]
+    #[command(name = "shell-setup", hide = true)]
     ShellSetup {
         /// Shell type
         #[arg(value_enum)]
@@ -78,7 +82,8 @@ fn main() -> Result<()> {
             script,
             all,
             r#match,
-        } => cmd::run::run(&script, all, r#match.as_deref())?,
+            args,
+        } => cmd::run::run(&script, all, r#match.as_deref(), &args)?,
         Commands::List { raw } => cmd::list::run(raw)?,
         Commands::ShellSetup { shell } => {
             // Output completions
@@ -86,7 +91,7 @@ fn main() -> Result<()> {
 
             // Output p() function
             match shell {
-                Shell::Zsh | Shell::Bash => {
+                Shell::Zsh => {
                     println!();
                     println!("# projj: quick navigation");
                     println!("p() {{");
@@ -94,6 +99,53 @@ fn main() -> Result<()> {
                     println!("  dir=$(projj find \"$@\")");
                     println!("  [ -n \"$dir\" ] && cd \"$dir\"");
                     println!("}}");
+                    println!();
+                    println!("# projj run: complete task names (first arg only)");
+                    println!("_projj_run_tasks() {{");
+                    println!("  [[ $CURRENT -ne 2 ]] && return");
+                    println!("  local tasks=()");
+                    println!("  local config=\"$HOME/.projj/config.toml\"");
+                    println!("  if [[ -f \"$config\" ]]; then");
+                    println!(
+                        "    tasks+=($(sed -n '/^\\[tasks\\]/,/^\\[/{{ /^[a-zA-Z_-]* *=/s/ *=.*//p }}' \"$config\" 2>/dev/null))"
+                    );
+                    println!("  fi");
+                    println!("  local tasks_dir=\"$HOME/.projj/tasks\"");
+                    println!("  if [[ -d \"$tasks_dir\" ]]; then");
+                    println!("    tasks+=($(ls \"$tasks_dir\" 2>/dev/null))");
+                    println!("  fi");
+                    println!("  compadd -a tasks");
+                    println!("}}");
+                    println!("compdef '_projj_run_tasks' 'projj run'");
+                }
+                Shell::Bash => {
+                    println!();
+                    println!("# projj: quick navigation");
+                    println!("p() {{");
+                    println!("  local dir");
+                    println!("  dir=$(projj find \"$@\")");
+                    println!("  [ -n \"$dir\" ] && cd \"$dir\"");
+                    println!("}}");
+                    println!();
+                    println!("# projj run: complete task names (first arg only)");
+                    println!("_projj_run_complete() {{");
+                    println!("  [[ $COMP_CWORD -ne 2 ]] && return");
+                    println!("  local tasks=\"\"");
+                    println!("  local config=\"$HOME/.projj/config.toml\"");
+                    println!("  if [[ -f \"$config\" ]]; then");
+                    println!(
+                        "    tasks+=\"$(sed -n '/^\\[tasks\\]/,/^\\[/{{ /^[a-zA-Z_-]* *=/s/ *=.*//p }}' \"$config\" 2>/dev/null)\""
+                    );
+                    println!("  fi");
+                    println!("  local tasks_dir=\"$HOME/.projj/tasks\"");
+                    println!("  if [[ -d \"$tasks_dir\" ]]; then");
+                    println!("    tasks+=\" $(ls \"$tasks_dir\" 2>/dev/null)\"");
+                    println!("  fi");
+                    println!(
+                        "  COMPREPLY=($(compgen -W \"$tasks\" -- \"${{COMP_WORDS[COMP_CWORD]}}\"))"
+                    );
+                    println!("}}");
+                    println!("complete -F _projj_run_complete projj run");
                 }
                 Shell::Fish => {
                     println!();
@@ -102,6 +154,16 @@ fn main() -> Result<()> {
                     println!("  set -l dir (projj find $argv)");
                     println!("  test -n \"$dir\"; and cd $dir");
                     println!("end");
+                    println!();
+                    println!("# projj run: complete task names");
+                    println!("complete -c projj -n '__fish_seen_subcommand_from run' -a '(begin");
+                    println!("  set -l config $HOME/.projj/config.toml");
+                    println!(
+                        "  test -f $config; and sed -n \"/^\\\\[tasks\\\\]/,/^\\\\[/{{ /^[a-zA-Z_-]* *=/s/ *=.*//p }}\" $config 2>/dev/null"
+                    );
+                    println!("  set -l tasks_dir $HOME/.projj/tasks");
+                    println!("  test -d $tasks_dir; and ls $tasks_dir 2>/dev/null");
+                    println!("end)'");
                 }
                 _ => {}
             }
