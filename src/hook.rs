@@ -321,6 +321,7 @@ mod tests {
         assert!(marker.exists());
     }
 
+    #[cfg(unix)]
     #[test]
     fn test_run_hooks_with_env() {
         let dir = tempfile::tempdir().unwrap();
@@ -344,6 +345,7 @@ mod tests {
         assert_eq!(content.trim(), "hello");
     }
 
+    #[cfg(unix)]
     #[test]
     fn test_run_hooks_receives_projj_env_vars() {
         let dir = tempfile::tempdir().unwrap();
