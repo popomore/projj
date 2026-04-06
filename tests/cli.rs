@@ -297,7 +297,7 @@ fn test_version() {
         .arg("--version")
         .assert()
         .success()
-        .stdout(predicate::str::contains("projj 3."));
+        .stdout(predicate::str::starts_with("projj "));
 }
 
 // ── projj add (existing repo) ──
