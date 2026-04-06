@@ -1,3 +1,6 @@
+// rexpect uses PTY which is unix-only
+#![cfg(unix)]
+
 use std::fs;
 
 fn bin_path() -> String {
@@ -7,15 +10,6 @@ fn bin_path() -> String {
 
 fn spawn_projj(home: &std::path::Path, args: &str) -> rexpect::session::PtySession {
     let cmd = format!("env HOME={} {} {args}", home.display(), bin_path());
-    rexpect::spawn(&cmd, Some(10000)).unwrap()
-}
-
-fn spawn_projj_no_color(home: &std::path::Path, args: &str) -> rexpect::session::PtySession {
-    let cmd = format!(
-        "env HOME={} NO_COLOR=1 {} {args}",
-        home.display(),
-        bin_path()
-    );
     rexpect::spawn(&cmd, Some(10000)).unwrap()
 }
 

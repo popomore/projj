@@ -38,9 +38,9 @@ mod tests {
 
     #[test]
     fn test_color_constants() {
-        assert!(!RESET.is_empty());
-        assert!(!DIM.is_empty());
-        assert!(!BOLD.is_empty());
+        assert!(RESET.contains('\x1b'));
+        assert!(DIM.contains('\x1b'));
+        assert!(BOLD.contains('\x1b'));
         assert_eq!(GROUP_COLORS.len(), 5);
     }
 }

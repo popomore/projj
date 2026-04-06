@@ -4,7 +4,7 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-/// Create a temp config dir with a config.toml and return (dir, config_path).
+/// Create a temp config dir with a `config.toml` and return the dir.
 fn setup_config(base_dir: &std::path::Path) -> TempDir {
     let config_dir = tempfile::tempdir().unwrap();
     let config_content = format!(
@@ -28,14 +28,6 @@ command = "true"
 fn create_repo(base: &std::path::Path, host: &str, owner: &str, repo: &str) {
     let repo_path = base.join(host).join(owner).join(repo).join(".git");
     fs::create_dir_all(repo_path).unwrap();
-}
-
-fn projj_cmd(config_dir: &std::path::Path) -> Command {
-    let mut cmd = Command::cargo_bin("projj").unwrap();
-    cmd.env("HOME", config_dir.parent().unwrap_or(config_dir));
-    // Override HOME so config_dir() points to our temp dir
-    // config_dir is $HOME/.projj, so HOME = config_dir/..
-    cmd
 }
 
 // ── projj list ──
