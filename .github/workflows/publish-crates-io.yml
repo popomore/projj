@@ -20,7 +20,7 @@ jobs:
             echo "::error::Invalid semver: $VERSION (from tag $GITHUB_REF_NAME)"
             exit 1
           fi
-          sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
+          perl -pi -e "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo publish
         env:

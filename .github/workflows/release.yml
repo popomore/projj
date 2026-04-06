@@ -67,7 +67,7 @@ jobs:
             echo "::error::Invalid semver: $VERSION (from tag $GITHUB_REF_NAME)"
             exit 1
           fi
-          sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
+          perl -pi -e "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
       - name: Install dist
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
@@ -133,7 +133,7 @@ jobs:
         shell: bash
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
+          perl -pi -e "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
       - name: Install Rust non-interactively if not already installed
         if: ${{ matrix.container }}
         run: |
@@ -197,7 +197,7 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
+          perl -pi -e "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
       - name: Install cached dist
         uses: actions/download-artifact@v7
         with:
@@ -252,7 +252,7 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
+          perl -pi -e "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
       - name: Install cached dist
         uses: actions/download-artifact@v7
         with:
