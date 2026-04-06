@@ -131,3 +131,126 @@ pub fn config_path() -> PathBuf {
 pub fn config_exists() -> bool {
     config_path().exists()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_minimal_config() {
+        let toml = r#"base = "/tmp/projj""#;
+        let config: Config = toml::from_str(toml).unwrap();
+        assert_eq!(config.platform, "github.com");
+        assert!(config.scripts.is_empty());
+        assert!(config.hooks.is_empty());
+    }
+
+    #[test]
+    fn test_parse_full_config() {
+        let toml = r#"
+base = ["/tmp/a", "/tmp/b"]
+platform = "gitlab.com"
+
+[scripts]
+clean = "rm -rf node_modules"
+
+[[hooks]]
+event = "post_add"
+matcher = "github\\.com"
+command = "clean"
+"#;
+        let config: Config = toml::from_str(toml).unwrap();
+        assert_eq!(config.platform, "gitlab.com");
+        assert_eq!(config.base_dirs().len(), 2);
+        assert_eq!(config.scripts["clean"], "rm -rf node_modules");
+        assert_eq!(config.hooks.len(), 1);
+        assert_eq!(config.hooks[0].event, "post_add");
+        assert_eq!(config.hooks[0].matcher.as_deref(), Some("github\\.com"));
+    }
+
+    #[test]
+    fn test_base_dirs_single() {
+        let config = Config {
+            base: BaseDir::Single("/tmp/projj".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![],
+        };
+        assert_eq!(config.base_dirs(), vec![PathBuf::from("/tmp/projj")]);
+    }
+
+    #[test]
+    fn test_base_dirs_multiple() {
+        let config = Config {
+            base: BaseDir::Multiple(vec!["/tmp/a".to_string(), "/tmp/b".to_string()]),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![],
+        };
+        assert_eq!(config.base_dirs().len(), 2);
+    }
+
+    #[test]
+    fn test_resolve_script_from_table() {
+        let mut scripts = HashMap::new();
+        scripts.insert("clean".to_string(), "rm -rf node_modules".to_string());
+        let config = Config {
+            base: BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts,
+            hooks: vec![],
+        };
+        assert_eq!(config.resolve_script("clean"), "rm -rf node_modules");
+    }
+
+    #[test]
+    fn test_resolve_script_raw_command() {
+        let config = Config {
+            base: BaseDir::Single("/tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![],
+        };
+        assert_eq!(config.resolve_script("git status"), "git status");
+    }
+
+    #[test]
+    fn test_resolve_paths_tilde() {
+        let toml = r#"base = "~/projj""#;
+        let mut config: Config = toml::from_str(toml).unwrap();
+        config.resolve_paths();
+        let home = dirs::home_dir().unwrap();
+        assert_eq!(config.base_dirs(), vec![home.join("projj")]);
+    }
+
+    #[test]
+    fn test_resolve_paths_bare_tilde() {
+        let toml = r#"base = "~""#;
+        let mut config: Config = toml::from_str(toml).unwrap();
+        config.resolve_paths();
+        let home = dirs::home_dir().unwrap();
+        assert_eq!(config.base_dirs(), vec![home]);
+    }
+
+    #[test]
+    fn test_resolve_paths_absolute() {
+        let toml = r#"base = "/absolute/path""#;
+        let mut config: Config = toml::from_str(toml).unwrap();
+        config.resolve_paths();
+        assert_eq!(config.base_dirs(), vec![PathBuf::from("/absolute/path")]);
+    }
+
+    #[test]
+    fn test_hook_entry_with_env() {
+        let toml = r#"
+base = "/tmp"
+
+[[hooks]]
+event = "post_add"
+command = "test"
+env = { NAME = "value" }
+"#;
+        let config: Config = toml::from_str(toml).unwrap();
+        assert_eq!(config.hooks[0].env["NAME"], "value");
+    }
+}

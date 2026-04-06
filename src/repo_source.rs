@@ -124,3 +124,141 @@ pub fn find(repos: &[Repo], keyword: &str) -> Vec<Repo> {
     exact.extend(partial);
     exact
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_repo(host: &str, owner: &str, name: &str) -> Repo {
+        Repo {
+            path: PathBuf::from(format!("/base/{host}/{owner}/{name}")),
+            base: PathBuf::from("/base"),
+            host: host.to_string(),
+            owner: owner.to_string(),
+            name: name.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_repo_display_key() {
+        let repo = make_repo("github.com", "popomore", "projj");
+        assert_eq!(repo.display_key(), "github.com/popomore/projj");
+    }
+
+    #[test]
+    fn test_repo_short_key() {
+        let repo = make_repo("github.com", "popomore", "projj");
+        assert_eq!(repo.short_key(), "popomore/projj");
+    }
+
+    #[test]
+    fn test_repo_git_url() {
+        let repo = make_repo("github.com", "popomore", "projj");
+        assert_eq!(repo.git_url(), "git@github.com:popomore/projj.git");
+    }
+
+    #[test]
+    fn test_find_exact_match() {
+        let repos = vec![
+            make_repo("github.com", "popomore", "projj"),
+            make_repo("github.com", "popomore", "tiny-projj"),
+        ];
+        let result = find(&repos, "projj");
+        // Both match: "projj" exact first, "tiny-projj" partial second
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].name, "projj");
+        assert_eq!(result[1].name, "tiny-projj");
+    }
+
+    #[test]
+    fn test_find_case_insensitive() {
+        let repos = vec![make_repo("github.com", "popomore", "Projj")];
+        let result = find(&repos, "projj");
+        assert_eq!(result.len(), 1);
+    }
+
+    #[test]
+    fn test_find_owner_repo() {
+        let repos = vec![
+            make_repo("github.com", "popomore", "projj"),
+            make_repo("github.com", "other", "projj"),
+        ];
+        let result = find(&repos, "popomore/projj");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].owner, "popomore");
+    }
+
+    #[test]
+    fn test_find_no_match() {
+        let repos = vec![make_repo("github.com", "popomore", "projj")];
+        let result = find(&repos, "nonexistent");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_find_partial_match() {
+        let repos = vec![
+            make_repo("github.com", "popomore", "projj"),
+            make_repo("github.com", "SeeleAI", "projj-tools"),
+        ];
+        let result = find(&repos, "projj");
+        assert_eq!(result.len(), 2);
+        // Exact match first
+        assert_eq!(result[0].name, "projj");
+        assert_eq!(result[1].name, "projj-tools");
+    }
+
+    #[test]
+    fn test_scan_empty_dir() {
+        let dir = tempfile::tempdir().unwrap();
+        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        assert!(repos.is_empty());
+    }
+
+    #[test]
+    fn test_scan_with_repos() {
+        let dir = tempfile::tempdir().unwrap();
+        let repo_path = dir.path().join("github.com/popomore/projj/.git");
+        std::fs::create_dir_all(&repo_path).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        assert_eq!(repos.len(), 1);
+        assert_eq!(repos[0].host, "github.com");
+        assert_eq!(repos[0].owner, "popomore");
+        assert_eq!(repos[0].name, "projj");
+    }
+
+    #[test]
+    fn test_scan_skips_hidden_dirs() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join(".hidden/owner/repo/.git")).unwrap();
+        std::fs::create_dir_all(dir.path().join("github.com/.hidden/repo/.git")).unwrap();
+        std::fs::create_dir_all(dir.path().join("github.com/owner/.hidden/.git")).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        assert!(repos.is_empty());
+    }
+
+    #[test]
+    fn test_scan_skips_non_git_dirs() {
+        let dir = tempfile::tempdir().unwrap();
+        // No .git directory
+        std::fs::create_dir_all(dir.path().join("github.com/owner/repo")).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        assert!(repos.is_empty());
+    }
+
+    #[test]
+    fn test_scan_nonexistent_base() {
+        let repos = scan(&[PathBuf::from("/nonexistent/path")]).unwrap();
+        assert!(repos.is_empty());
+    }
+
+    #[test]
+    fn test_scan_multiple_bases() {
+        let dir1 = tempfile::tempdir().unwrap();
+        let dir2 = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir1.path().join("github.com/a/repo1/.git")).unwrap();
+        std::fs::create_dir_all(dir2.path().join("gitlab.com/b/repo2/.git")).unwrap();
+        let repos = scan(&[dir1.path().to_path_buf(), dir2.path().to_path_buf()]).unwrap();
+        assert_eq!(repos.len(), 2);
+    }
+}

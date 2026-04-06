@@ -155,3 +155,77 @@ pub fn run_command(script: &str, cwd: &Path) -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_matches_repo_none() {
+        assert!(matches_repo(None, "github.com/popomore/projj"));
+    }
+
+    #[test]
+    fn test_matches_repo_empty() {
+        assert!(matches_repo(Some(""), "github.com/popomore/projj"));
+    }
+
+    #[test]
+    fn test_matches_repo_wildcard() {
+        assert!(matches_repo(Some("*"), "github.com/popomore/projj"));
+    }
+
+    #[test]
+    fn test_matches_repo_exact_host() {
+        assert!(matches_repo(
+            Some("github\\.com"),
+            "github.com/popomore/projj"
+        ));
+        assert!(!matches_repo(
+            Some("gitlab\\.com"),
+            "github.com/popomore/projj"
+        ));
+    }
+
+    #[test]
+    fn test_matches_repo_owner_pattern() {
+        assert!(matches_repo(
+            Some("github\\.com/SeeleAI"),
+            "github.com/SeeleAI/agent"
+        ));
+        assert!(!matches_repo(
+            Some("github\\.com/SeeleAI"),
+            "github.com/popomore/projj"
+        ));
+    }
+
+    #[test]
+    fn test_matches_repo_multi_pattern() {
+        let pattern = "gitlab\\.alibaba|code\\.alipay";
+        assert!(matches_repo(
+            Some(pattern),
+            "gitlab.alibaba-inc.com/team/repo"
+        ));
+        assert!(matches_repo(Some(pattern), "code.alipay.com/team/repo"));
+        assert!(!matches_repo(Some(pattern), "github.com/team/repo"));
+    }
+
+    #[test]
+    fn test_matches_repo_invalid_regex() {
+        assert!(!matches_repo(Some("[invalid"), "github.com/popomore/projj"));
+    }
+
+    #[test]
+    fn test_run_command_success() {
+        let dir = tempfile::tempdir().unwrap();
+        let result = run_command("true", dir.path());
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_run_command_failure() {
+        let dir = tempfile::tempdir().unwrap();
+        let result = run_command("false", dir.path());
+        assert!(result.is_err());
+    }
+}
