@@ -267,4 +267,57 @@ mod tests {
         assert_eq!(info.owner, "owner");
         assert_eq!(info.repo, "repo");
     }
+
+    #[test]
+    fn test_parse_local_path() {
+        let dir = tempfile::tempdir().unwrap();
+        let repo_dir = dir.path().join("myrepo");
+        std::fs::create_dir_all(&repo_dir).unwrap();
+
+        // Init a real git repo with remote
+        std::process::Command::new("git")
+            .args(["init"])
+            .current_dir(&repo_dir)
+            .output()
+            .unwrap();
+        std::process::Command::new("git")
+            .args([
+                "remote",
+                "add",
+                "origin",
+                "git@github.com:testowner/testrepo.git",
+            ])
+            .current_dir(&repo_dir)
+            .output()
+            .unwrap();
+
+        let info = parse_repo(&repo_dir.to_string_lossy(), "github.com").unwrap();
+        assert_eq!(info.host, "github.com");
+        assert_eq!(info.owner, "testowner");
+        assert_eq!(info.repo, "testrepo");
+        // clone_url should be the local path for move
+        assert_eq!(
+            info.clone_url,
+            repo_dir.canonicalize().unwrap().to_string_lossy()
+        );
+    }
+
+    #[test]
+    fn test_parse_local_path_not_git() {
+        let dir = tempfile::tempdir().unwrap();
+        let result = parse_repo(&dir.path().to_string_lossy(), "github.com");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_local_path_nonexistent() {
+        let result = parse_repo("/nonexistent/path/repo", "github.com");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_invalid_input() {
+        let result = parse_repo("not-a-valid-input", "github.com");
+        assert!(result.is_err());
+    }
 }

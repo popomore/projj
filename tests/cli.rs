@@ -341,3 +341,234 @@ fn test_add_existing_repo() {
         .stderr(predicate::str::contains("already exists"))
         .stdout(predicate::str::contains("github.com/popomore/projj"));
 }
+
+// ── projj add (local move) ──
+
+#[test]
+fn test_add_local_repo() {
+    let base = tempfile::tempdir().unwrap();
+    let local = tempfile::tempdir().unwrap();
+
+    // Create a fake local git repo with remote
+    let repo_dir = local.path().join("myrepo");
+    fs::create_dir_all(repo_dir.join(".git")).unwrap();
+    // Create a minimal git config with remote
+    fs::create_dir_all(repo_dir.join(".git")).unwrap();
+    fs::write(
+        repo_dir.join(".git/config"),
+        "[remote \"origin\"]\n\turl = git@github.com:testowner/testrepo.git\n",
+    )
+    .unwrap();
+    // git config --get needs a proper git repo, so init it
+    std::process::Command::new("git")
+        .args(["init"])
+        .current_dir(&repo_dir)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args([
+            "remote",
+            "add",
+            "origin",
+            "git@github.com:testowner/testrepo.git",
+        ])
+        .current_dir(&repo_dir)
+        .output()
+        .unwrap();
+
+    let home = tempfile::tempdir().unwrap();
+    let projj_dir = home.path().join(".projj");
+    fs::create_dir_all(&projj_dir).unwrap();
+    let config_content = format!(
+        "base = \"{}\"\nplatform = \"github.com\"\n",
+        base.path().display()
+    );
+    fs::write(projj_dir.join("config.toml"), config_content).unwrap();
+
+    Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .args(["add", &repo_dir.to_string_lossy()])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("Moving"))
+        .stdout(predicate::str::contains("github.com/testowner/testrepo"));
+
+    // Original should be moved
+    assert!(!repo_dir.exists());
+    // Target should exist
+    assert!(
+        base.path()
+            .join("github.com/testowner/testrepo/.git")
+            .exists()
+    );
+}
+
+// ── projj list (multiple bases) ──
+
+#[test]
+fn test_list_multiple_bases() {
+    let base1 = tempfile::tempdir().unwrap();
+    let base2 = tempfile::tempdir().unwrap();
+    create_repo(base1.path(), "github.com", "a", "repo1");
+    create_repo(base2.path(), "gitlab.com", "b", "repo2");
+
+    let home = tempfile::tempdir().unwrap();
+    let projj_dir = home.path().join(".projj");
+    fs::create_dir_all(&projj_dir).unwrap();
+    let config_content = format!(
+        "base = [\"{}\", \"{}\"]\nplatform = \"github.com\"\n",
+        base1.path().display(),
+        base2.path().display()
+    );
+    fs::write(projj_dir.join("config.toml"), config_content).unwrap();
+
+    // Pretty list should show group headers
+    Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .args(["list"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("a/repo1"))
+        .stdout(predicate::str::contains("b/repo2"))
+        .stdout(predicate::str::contains("Total: 2 repositories"));
+
+    // Raw list
+    Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .args(["list", "--raw"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("github.com/a/repo1"))
+        .stdout(predicate::str::contains("gitlab.com/b/repo2"));
+}
+
+// ── projj find (case insensitive) ──
+
+#[test]
+fn test_find_case_insensitive() {
+    let base = tempfile::tempdir().unwrap();
+    create_repo(base.path(), "github.com", "Owner", "MyRepo");
+
+    let home = tempfile::tempdir().unwrap();
+    let projj_dir = home.path().join(".projj");
+    fs::create_dir_all(&projj_dir).unwrap();
+    let config_content = format!(
+        "base = \"{}\"\nplatform = \"github.com\"\n",
+        base.path().display()
+    );
+    fs::write(projj_dir.join("config.toml"), config_content).unwrap();
+
+    Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .args(["find", "myrepo"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Owner/MyRepo"));
+}
+
+// ── projj add with hooks ──
+
+#[test]
+fn test_add_existing_with_post_add_hook() {
+    let base = tempfile::tempdir().unwrap();
+    create_repo(base.path(), "github.com", "popomore", "projj");
+
+    let home = tempfile::tempdir().unwrap();
+    let projj_dir = home.path().join(".projj");
+    fs::create_dir_all(&projj_dir).unwrap();
+
+    let marker = base.path().join("hook_ran");
+    let config_content = format!(
+        r#"base = "{}"
+platform = "github.com"
+
+[[hooks]]
+event = "post_add"
+command = "touch {}"
+"#,
+        base.path().display(),
+        marker.display()
+    );
+    fs::write(projj_dir.join("config.toml"), config_content).unwrap();
+
+    Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .args(["add", "popomore/projj"])
+        .assert()
+        .success();
+
+    assert!(marker.exists(), "post_add hook should have run");
+}
+
+// ── projj run with hooks dir ──
+
+#[test]
+fn test_run_from_hooks_dir() {
+    let home = tempfile::tempdir().unwrap();
+    let projj_dir = home.path().join(".projj");
+    let hooks_dir = projj_dir.join("hooks");
+    fs::create_dir_all(&hooks_dir).unwrap();
+
+    // Create a hook script
+    let script_path = hooks_dir.join("greet");
+    fs::write(&script_path, "#!/bin/bash\necho hello-from-hook").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&script_path, fs::Permissions::from_mode(0o755)).unwrap();
+    }
+
+    let config_content = "base = \"/tmp\"\nplatform = \"github.com\"\n";
+    fs::write(projj_dir.join("config.toml"), config_content).unwrap();
+
+    Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .args(["run", "greet"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("hello-from-hook"));
+}
+
+// ── no config for various commands ──
+
+#[test]
+fn test_no_config_find() {
+    let home = tempfile::tempdir().unwrap();
+    Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .args(["find", "foo"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("projj init"));
+}
+
+#[test]
+fn test_no_config_add() {
+    let home = tempfile::tempdir().unwrap();
+    Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .args(["add", "owner/repo"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("projj init"));
+}
+
+#[test]
+fn test_no_config_run() {
+    let home = tempfile::tempdir().unwrap();
+    Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .args(["run", "echo hi"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("projj init"));
+}
