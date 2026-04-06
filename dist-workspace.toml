@@ -10,7 +10,7 @@ installers = ["shell", "powershell", "homebrew"]
 # Publish Homebrew formula
 publish-jobs = ["homebrew", "./publish-crates-io"]
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"]
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-pc-windows-msvc"]
 # A GitHub repo to push Homebrew formulas to
 tap = "popomore/homebrew-tap"
 # Skip checking whether the specified configuration files are up to date
