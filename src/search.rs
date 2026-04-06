@@ -6,7 +6,15 @@ use anyhow::Result;
 
 use crate::repo_source::Repo;
 
-// ── ANSI helpers ──
+// ── Color support ──
+//
+// Respects NO_COLOR (https://no-color.org/) standard.
+// Set NO_COLOR=1 to disable all color output.
+
+/// Check if color output is enabled.
+pub fn color_enabled() -> bool {
+    std::env::var("NO_COLOR").is_err()
+}
 
 pub const RESET: &str = "\x1b[0m";
 pub const DIM: &str = "\x1b[2m";
@@ -19,6 +27,11 @@ pub const GROUP_COLORS: &[&str] = &[
     "\x1b[48;5;30m\x1b[97m",  // teal
     "\x1b[48;5;238m\x1b[97m", // dark gray
 ];
+
+/// Get a color code, returning empty string if colors are disabled.
+pub fn color(code: &str) -> &str {
+    if color_enabled() { code } else { "" }
+}
 
 // ── Group key ──
 
@@ -41,21 +54,19 @@ pub fn group_key_for(repo: &Repo, has_multiple_bases: bool) -> String {
 pub fn build_indexed_items(repos: &[Repo], has_multiple_bases: bool) -> Vec<String> {
     let group_colors = assign_group_colors(repos, has_multiple_bases);
 
+    let r = color(RESET);
+    let d = color(DIM);
+
     repos
         .iter()
         .enumerate()
         .map(|(i, repo)| {
             let group_key = group_key_for(repo, has_multiple_bases);
-            let color = group_colors[&group_key];
+            let c = color(group_colors[&group_key]);
             format!(
-                "{i}\t{} {} {} {}  {}{}{}",
-                color,
-                group_key,
-                RESET,
+                "{i}\t{c} {group_key} {r} {}  {d}{}{r}",
                 repo.short_key(),
-                DIM,
-                repo.git_url(),
-                RESET,
+                repo.git_url()
             )
         })
         .collect()
@@ -64,15 +75,11 @@ pub fn build_indexed_items(repos: &[Repo], has_multiple_bases: bool) -> Vec<Stri
 /// Print single repo info to stderr (for find with one match).
 pub fn print_repo_info(repo: &Repo, has_multiple_bases: bool) {
     let group_key = group_key_for(repo, has_multiple_bases);
-    let color = GROUP_COLORS[0];
-    eprintln!("{color} {group_key} {RESET}");
-    eprintln!(
-        "    {}  {}{}{}",
-        repo.short_key(),
-        DIM,
-        repo.git_url(),
-        RESET
-    );
+    let c = color(GROUP_COLORS[0]);
+    let r = color(RESET);
+    let d = color(DIM);
+    eprintln!("{c} {group_key} {r}");
+    eprintln!("    {}  {d}{}{r}", repo.short_key(), repo.git_url());
 }
 
 /// Assign a color to each group key.

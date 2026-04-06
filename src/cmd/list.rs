@@ -4,7 +4,7 @@ use anyhow::Result;
 
 use crate::config::Config;
 use crate::repo_source::{self, Repo};
-use crate::search::{self, BOLD, DIM, GROUP_COLORS, RESET};
+use crate::search::{self, BOLD, DIM, GROUP_COLORS, RESET, color};
 
 pub fn run(raw: bool) -> Result<()> {
     let config = Config::load()?;
@@ -33,32 +33,24 @@ pub fn run(raw: bool) -> Result<()> {
         }
     }
 
+    let r = color(RESET);
+    let d = color(DIM);
+    let b = color(BOLD);
+
     for (i, (label, group_repos)) in grouped.iter().enumerate() {
-        let color = GROUP_COLORS[i % GROUP_COLORS.len()];
-        println!(
-            "{} {} {} {}({}){}",
-            color,
-            label,
-            RESET,
-            DIM,
-            group_repos.len(),
-            RESET
-        );
+        let c = color(GROUP_COLORS[i % GROUP_COLORS.len()]);
+        println!("{c} {label} {r} {d}({})  {r}", group_repos.len());
         for repo in group_repos {
             println!(
-                "  {}{}/{}{}  {}{}{}",
-                BOLD,
+                "  {b}{}/{}{r}  {d}{}{r}",
                 repo.owner,
                 repo.name,
-                RESET,
-                DIM,
-                repo.git_url(),
-                RESET
+                repo.git_url()
             );
         }
     }
 
-    println!("\n{DIM}Total: {} repositories{RESET}", repos.len());
+    println!("\n{d}Total: {} repositories{r}", repos.len());
 
     Ok(())
 }
