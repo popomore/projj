@@ -32,6 +32,8 @@ similar_names = "allow"
 
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = ["precommit-hook", "run-cargo-test", "run-cargo-clippy", "run-cargo-fmt"] }
+assert_cmd = "2"
+predicates = "3"
 tempfile = "3"
 
 # The profile that 'dist' will build with
