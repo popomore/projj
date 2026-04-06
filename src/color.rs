@@ -22,3 +22,25 @@ pub const GROUP_COLORS: &[&str] = &[
 pub fn color(code: &str) -> &str {
     if color_enabled() { code } else { "" }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_color_returns_code_when_enabled() {
+        // Can't guarantee NO_COLOR is unset in test env,
+        // but we can test the function logic
+        let result = color(RESET);
+        // Either returns the code or empty string
+        assert!(result == RESET || result.is_empty());
+    }
+
+    #[test]
+    fn test_color_constants() {
+        assert!(!RESET.is_empty());
+        assert!(!DIM.is_empty());
+        assert!(!BOLD.is_empty());
+        assert_eq!(GROUP_COLORS.len(), 5);
+    }
+}

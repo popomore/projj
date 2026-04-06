@@ -10,6 +10,15 @@ fn spawn_projj(home: &std::path::Path, args: &str) -> rexpect::session::PtySessi
     rexpect::spawn(&cmd, Some(10000)).unwrap()
 }
 
+fn spawn_projj_no_color(home: &std::path::Path, args: &str) -> rexpect::session::PtySession {
+    let cmd = format!(
+        "env HOME={} NO_COLOR=1 {} {args}",
+        home.display(),
+        bin_path()
+    );
+    rexpect::spawn(&cmd, Some(10000)).unwrap()
+}
+
 fn setup_env(base: &std::path::Path) -> tempfile::TempDir {
     let home = tempfile::tempdir().unwrap();
     let projj_dir = home.path().join(".projj");

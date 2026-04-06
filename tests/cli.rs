@@ -572,3 +572,105 @@ fn test_no_config_run() {
         .failure()
         .stderr(predicate::str::contains("projj init"));
 }
+
+// ── NO_COLOR ──
+
+#[test]
+fn test_list_no_color() {
+    let base = tempfile::tempdir().unwrap();
+    create_repo(base.path(), "github.com", "popomore", "projj");
+
+    let home = tempfile::tempdir().unwrap();
+    let projj_dir = home.path().join(".projj");
+    fs::create_dir_all(&projj_dir).unwrap();
+    let config_content = format!(
+        "base = \"{}\"\nplatform = \"github.com\"\n",
+        base.path().display()
+    );
+    fs::write(projj_dir.join("config.toml"), config_content).unwrap();
+
+    let output = Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .env("NO_COLOR", "1")
+        .args(["list"])
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    // Should not contain any ANSI escape codes
+    assert!(
+        !stdout.contains("\x1b["),
+        "output should not contain ANSI codes"
+    );
+    assert!(stdout.contains("popomore/projj"));
+    assert!(stdout.contains("Total:"));
+}
+
+#[test]
+fn test_find_no_color() {
+    let base = tempfile::tempdir().unwrap();
+    create_repo(base.path(), "github.com", "popomore", "projj");
+
+    let home = tempfile::tempdir().unwrap();
+    let projj_dir = home.path().join(".projj");
+    fs::create_dir_all(&projj_dir).unwrap();
+    let config_content = format!(
+        "base = \"{}\"\nplatform = \"github.com\"\n",
+        base.path().display()
+    );
+    fs::write(projj_dir.join("config.toml"), config_content).unwrap();
+
+    let output = Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .env("NO_COLOR", "1")
+        .args(["find", "projj"])
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        !stdout.contains("\x1b["),
+        "stdout should not contain ANSI codes"
+    );
+    assert!(
+        !stderr.contains("\x1b["),
+        "stderr should not contain ANSI codes"
+    );
+    assert!(stdout.contains("github.com/popomore/projj"));
+}
+
+#[test]
+fn test_list_no_color_raw_unchanged() {
+    let base = tempfile::tempdir().unwrap();
+    create_repo(base.path(), "github.com", "popomore", "projj");
+
+    let home = tempfile::tempdir().unwrap();
+    let projj_dir = home.path().join(".projj");
+    fs::create_dir_all(&projj_dir).unwrap();
+    let config_content = format!(
+        "base = \"{}\"\nplatform = \"github.com\"\n",
+        base.path().display()
+    );
+    fs::write(projj_dir.join("config.toml"), config_content).unwrap();
+
+    // --raw should be identical with and without NO_COLOR
+    let with_color = Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .args(["list", "--raw"])
+        .output()
+        .unwrap();
+
+    let without_color = Command::cargo_bin("projj")
+        .unwrap()
+        .env("HOME", home.path())
+        .env("NO_COLOR", "1")
+        .args(["list", "--raw"])
+        .output()
+        .unwrap();
+
+    assert_eq!(with_color.stdout, without_color.stdout);
+}
