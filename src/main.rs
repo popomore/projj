@@ -1,4 +1,5 @@
 mod cmd;
+mod color;
 mod config;
 mod git;
 mod hook;

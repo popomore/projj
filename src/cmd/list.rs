@@ -2,9 +2,10 @@ use std::collections::BTreeMap;
 
 use anyhow::Result;
 
+use crate::color::{BOLD, DIM, GROUP_COLORS, RESET, color};
 use crate::config::Config;
 use crate::repo_source::{self, Repo};
-use crate::search::{self, BOLD, DIM, GROUP_COLORS, RESET, color};
+use crate::search;
 
 pub fn run(raw: bool) -> Result<()> {
     let config = Config::load()?;
