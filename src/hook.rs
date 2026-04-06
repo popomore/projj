@@ -345,6 +345,30 @@ mod tests {
         assert_eq!(content.trim(), "hello");
     }
 
+    #[cfg(windows)]
+    #[test]
+    fn test_run_hooks_with_env_windows() {
+        let dir = tempfile::tempdir().unwrap();
+        let outfile = dir.path().join("env_out.txt");
+        let mut env = HashMap::new();
+        env.insert("MY_VAR".to_string(), "hello".to_string());
+        let config = Config {
+            base: crate::config::BaseDir::Single("C:\\tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                command: format!("echo %MY_VAR% > {}", outfile.display()),
+                env,
+            }],
+        };
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_ok());
+        let content = std::fs::read_to_string(&outfile).unwrap();
+        assert!(content.trim().contains("hello"));
+    }
+
     #[cfg(unix)]
     #[test]
     fn test_run_hooks_receives_projj_env_vars() {
@@ -365,6 +389,28 @@ mod tests {
         assert!(result.is_ok());
         let content = std::fs::read_to_string(&outfile).unwrap();
         assert_eq!(content.trim(), "github.com");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn test_run_hooks_receives_projj_env_vars_windows() {
+        let dir = tempfile::tempdir().unwrap();
+        let outfile = dir.path().join("env_out.txt");
+        let config = Config {
+            base: crate::config::BaseDir::Single("C:\\tmp".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![HookEntry {
+                event: "post_add".to_string(),
+                matcher: None,
+                command: format!("echo %PROJJ_REPO_HOST% > {}", outfile.display()),
+                env: HashMap::new(),
+            }],
+        };
+        let result = run_hooks(&config, "post_add", "github.com/popomore/projj", dir.path());
+        assert!(result.is_ok());
+        let content = std::fs::read_to_string(&outfile).unwrap();
+        assert!(content.trim().contains("github.com"));
     }
 
     #[test]
