@@ -1,8 +1,8 @@
 use anyhow::Result;
 
-use super::search;
 use crate::config::Config;
 use crate::repo_source::{self, Repo};
+use crate::search;
 
 pub fn run(keyword: Option<&str>) -> Result<()> {
     let config = Config::load()?;

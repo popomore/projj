@@ -3,10 +3,10 @@ use std::process::Command;
 
 use anyhow::{Result, bail};
 
-use super::search;
 use crate::config::Config;
 use crate::git;
 use crate::hook;
+use crate::search;
 
 pub fn run(repo_arg: &str) -> Result<()> {
     let config = Config::load()?;

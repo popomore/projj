@@ -4,10 +4,10 @@ use std::path::Path;
 use anyhow::{Result, bail};
 use dialoguer::Input;
 
-use super::search;
 use crate::config::Config;
 use crate::hook;
 use crate::repo_source;
+use crate::search;
 
 pub fn run(keyword: &str) -> Result<()> {
     let config = Config::load()?;

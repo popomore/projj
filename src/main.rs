@@ -3,6 +3,7 @@ mod config;
 mod git;
 mod hook;
 mod repo_source;
+mod search;
 
 use anyhow::Result;
 use clap::{CommandFactory, Parser, Subcommand};

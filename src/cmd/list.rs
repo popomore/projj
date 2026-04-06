@@ -2,9 +2,9 @@ use std::collections::BTreeMap;
 
 use anyhow::Result;
 
-use super::search::{self, BOLD, DIM, GROUP_COLORS, RESET};
 use crate::config::Config;
 use crate::repo_source::{self, Repo};
+use crate::search::{self, BOLD, DIM, GROUP_COLORS, RESET};
 
 pub fn run(raw: bool) -> Result<()> {
     let config = Config::load()?;
