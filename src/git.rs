@@ -348,4 +348,65 @@ mod tests {
         let result = parse_repo("not-a-valid-input", "github.com");
         assert!(result.is_err());
     }
+
+    #[test]
+    fn test_move_local() {
+        let src_dir = tempfile::tempdir().unwrap();
+        let target_dir = tempfile::tempdir().unwrap();
+
+        let src = src_dir.path().join("myrepo");
+        std::fs::create_dir_all(src.join(".git")).unwrap();
+        std::fs::write(src.join("file.txt"), "hello").unwrap();
+
+        let target = target_dir.path().join("github.com/owner/repo");
+        move_local(&src.to_string_lossy(), &target).unwrap();
+
+        assert!(!src.exists());
+        assert!(target.join(".git").exists());
+        assert_eq!(
+            std::fs::read_to_string(target.join("file.txt")).unwrap(),
+            "hello"
+        );
+    }
+
+    #[test]
+    fn test_move_local_nonexistent() {
+        let target_dir = tempfile::tempdir().unwrap();
+        let target = target_dir.path().join("target");
+        let result = move_local("/nonexistent/repo", &target);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_local_path_no_remote() {
+        let dir = tempfile::tempdir().unwrap();
+        let repo_dir = dir.path().join("myrepo");
+        std::fs::create_dir_all(&repo_dir).unwrap();
+        // Init git repo without remote
+        std::process::Command::new("git")
+            .args(["init"])
+            .current_dir(&repo_dir)
+            .output()
+            .unwrap();
+        let result = parse_repo(&repo_dir.to_string_lossy(), "github.com");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_https_invalid_short() {
+        // Only host, no path
+        let result = parse_repo("https://github.com/onlyowner", "github.com");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_rel_path() {
+        let info = RepoInfo {
+            host: "github.com".to_string(),
+            owner: "popomore".to_string(),
+            repo: "projj".to_string(),
+            clone_url: String::new(),
+        };
+        assert_eq!(info.rel_path(), "github.com/popomore/projj");
+    }
 }

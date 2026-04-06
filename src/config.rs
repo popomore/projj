@@ -347,6 +347,18 @@ command = "clean"
     }
 
     #[test]
+    fn test_choose_base_single() {
+        let config = Config {
+            base: BaseDir::Single("/tmp/projj".to_string()),
+            platform: "github.com".to_string(),
+            scripts: HashMap::new(),
+            hooks: vec![],
+        };
+        let base = config.choose_base().unwrap();
+        assert_eq!(base, PathBuf::from("/tmp/projj"));
+    }
+
+    #[test]
     fn test_hook_entry_with_env() {
         let toml = r#"
 base = "/tmp"
