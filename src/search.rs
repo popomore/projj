@@ -210,3 +210,107 @@ fn fzf_select(choices: &[String], query: Option<&str>) -> Result<Option<String>>
         Ok(None)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn make_repo(base: &str, host: &str, owner: &str, name: &str) -> Repo {
+        Repo {
+            path: PathBuf::from(format!("{base}/{host}/{owner}/{name}")),
+            base: PathBuf::from(base),
+            host: host.to_string(),
+            owner: owner.to_string(),
+            name: name.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_group_key_single_base() {
+        let repo = make_repo("/base", "github.com", "popomore", "projj");
+        assert_eq!(group_key_for(&repo, false), "github.com");
+    }
+
+    #[test]
+    fn test_group_key_multiple_bases() {
+        let repo = make_repo("/home/user/projj", "github.com", "popomore", "projj");
+        assert_eq!(group_key_for(&repo, true), "projj/github.com");
+    }
+
+    #[test]
+    fn test_build_indexed_items() {
+        let repos = vec![
+            make_repo("/base", "github.com", "popomore", "projj"),
+            make_repo("/base", "github.com", "SeeleAI", "agent"),
+        ];
+        let items = build_indexed_items(&repos, false);
+        assert_eq!(items.len(), 2);
+        assert!(items[0].starts_with("0\t"));
+        assert!(items[1].starts_with("1\t"));
+        assert!(items[0].contains("popomore/projj"));
+        assert!(items[1].contains("SeeleAI/agent"));
+    }
+
+    #[test]
+    fn test_build_indexed_items_multiple_bases() {
+        let repos = vec![
+            make_repo("/base1", "github.com", "a", "repo1"),
+            make_repo("/base2", "gitlab.com", "b", "repo2"),
+        ];
+        let items = build_indexed_items(&repos, true);
+        assert!(items[0].contains("base1/github.com"));
+        assert!(items[1].contains("base2/gitlab.com"));
+    }
+
+    #[test]
+    fn test_build_indexed_items_contains_git_url() {
+        let repos = vec![make_repo("/base", "github.com", "popomore", "projj")];
+        let items = build_indexed_items(&repos, false);
+        assert!(items[0].contains("git@github.com:popomore/projj.git"));
+    }
+
+    #[test]
+    fn test_select_one_empty() {
+        let result = select_one(&[], "prompt", None).unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_select_one_single() {
+        let choices = vec!["only-one".to_string()];
+        let result = select_one(&choices, "prompt", None).unwrap();
+        assert_eq!(result, Some("only-one".to_string()));
+    }
+
+    #[test]
+    fn test_fzf_indexed_empty() {
+        let result = fzf_indexed(&[], None).unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_has_fzf() {
+        // Just verify it returns a bool without panicking
+        let _ = has_fzf();
+    }
+
+    #[test]
+    fn test_has_command() {
+        assert!(has_command("sh"));
+        assert!(!has_command("nonexistent_binary_xyz"));
+    }
+
+    #[test]
+    fn test_assign_group_colors() {
+        let repos = vec![
+            make_repo("/base", "github.com", "a", "r1"),
+            make_repo("/base", "github.com", "b", "r2"),
+            make_repo("/base", "gitlab.com", "c", "r3"),
+        ];
+        let colors = assign_group_colors(&repos, false);
+        // Two groups: github.com and gitlab.com
+        assert_eq!(colors.len(), 2);
+        assert_ne!(colors["github.com"], colors["gitlab.com"]);
+    }
+}
