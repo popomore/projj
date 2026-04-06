@@ -1,10 +1,27 @@
 # Projj
 
-Manage git repositories with directory conventions.
+Manage git repositories with directory conventions — clone once, find instantly.
 
-## Why?
+[![Crates.io](https://img.shields.io/crates/v/projj.svg)](https://crates.io/crates/projj)
+[![CI](https://github.com/popomore/projj/actions/workflows/ci.yml/badge.svg)](https://github.com/popomore/projj/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Every git repo gets a predictable home based on its URL:
+## The Problem
+
+Git repos pile up. You clone them into `~/code`, `~/projects`, `~/work`, or wherever feels right at the moment. Six months later:
+
+```
+~/code/projj
+~/projects/old-projj
+~/misc/projj-backup
+~/work/projj-fork
+```
+
+Which one is current? Where did you put that internal GitLab repo? You `find / -name .git` and wait.
+
+## The Solution
+
+Projj gives every repo a predictable home based on its URL — just like `GOPATH` did for Go:
 
 ```text
 $BASE/
@@ -12,11 +29,15 @@ $BASE/
 │   └── popomore/
 │       └── projj/
 └── gitlab.com/
-    └── popomore/
-        └── projj/
+    └── company/
+        └── internal-tool/
 ```
 
-No more `~/code/misc/old-projj-backup`. Clone once, find instantly.
+- **One repo, one location** — no duplicates, no guessing
+- **Instant lookup** — fuzzy find with fzf, jump with `p projj`
+- **Hooks** — auto-configure git user, register with zoxide, run custom scripts on clone
+- **Multi-host** — GitHub, GitLab, Gitee, self-hosted — all organized the same way
+- **Zero overhead** — no daemon, no cache, no database, just your filesystem
 
 ## Install
 
@@ -31,11 +52,11 @@ brew install popomore/tap/projj
 ## Quick Start
 
 ```bash
-projj init                              # initialize config + install built-in tasks
-projj add popomore/projj               # clone a repo
-projj find projj                        # find and jump to a repo
-projj list                              # list all repos with grouped display
-projj run repo-status --all             # check disk usage and git status across repos
+projj init                              # one-time setup
+projj add popomore/projj               # clone → ~/projj/github.com/popomore/projj
+projj add git@gitlab.com:team/app.git   # clone → ~/projj/gitlab.com/team/app
+p projj                                 # jump to repo instantly (shell function)
+projj run repo-status --all             # batch operations across all repos
 ```
 
 ### Shell Integration
