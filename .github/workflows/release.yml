@@ -39,7 +39,6 @@ permissions:
 # If there's a prerelease-style suffix to the version, then the release(s)
 # will be marked as a prerelease.
 on:
-  pull_request:
   push:
     tags:
       - '**[0-9]+.[0-9]+.[0-9]+*'
@@ -60,6 +59,15 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+      - name: Inject version from tag
+        if: ${{ github.ref_type == 'tag' }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
+            echo "::error::Invalid semver: $VERSION (from tag $GITHUB_REF_NAME)"
+            exit 1
+          fi
+          sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
       - name: Install dist
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
@@ -120,6 +128,12 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+      - name: Inject version from tag
+        if: ${{ github.ref_type == 'tag' }}
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
       - name: Install Rust non-interactively if not already installed
         if: ${{ matrix.container }}
         run: |
@@ -179,6 +193,11 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+      - name: Inject version from tag
+        if: ${{ github.ref_type == 'tag' }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
       - name: Install cached dist
         uses: actions/download-artifact@v7
         with:
@@ -229,6 +248,11 @@ jobs:
         with:
           persist-credentials: false
           submodules: recursive
+      - name: Inject version from tag
+        if: ${{ github.ref_type == 'tag' }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
       - name: Install cached dist
         uses: actions/download-artifact@v7
         with:

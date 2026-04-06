@@ -1,6 +1,6 @@
 [package]
 name = "projj"
-version = "3.0.0"
+version = "0.0.0-dev"
 edition = "2024"
 description = "Manage git repositories with directory conventions"
 license = "MIT"

@@ -12,6 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Inject version from tag
+        if: ${{ github.ref_type == 'tag' }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
+            echo "::error::Invalid semver: $VERSION (from tag $GITHUB_REF_NAME)"
+            exit 1
+          fi
+          sed -i "s/^version = .*/version = \"$VERSION\"/" Cargo.toml
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo publish
         env:
