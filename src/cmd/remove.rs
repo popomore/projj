@@ -4,9 +4,9 @@ use std::path::Path;
 use anyhow::{Result, bail};
 use dialoguer::Input;
 
+use super::search;
 use crate::config::Config;
 use crate::hook;
-use crate::integration;
 use crate::repo_source;
 
 pub fn run(keyword: &str) -> Result<()> {
@@ -22,7 +22,7 @@ pub fn run(keyword: &str) -> Result<()> {
         .iter()
         .map(|r| r.path.to_string_lossy().to_string())
         .collect();
-    let selected = integration::select_one(&paths, "Select repository to remove", Some(keyword))?;
+    let selected = search::select_one(&paths, "Select repository to remove", Some(keyword))?;
 
     let Some(target) = selected else {
         bail!("No repository selected")

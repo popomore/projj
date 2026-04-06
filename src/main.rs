@@ -2,7 +2,6 @@ mod cmd;
 mod config;
 mod git;
 mod hook;
-mod integration;
 mod repo_source;
 
 use anyhow::Result;

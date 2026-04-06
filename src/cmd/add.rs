@@ -3,10 +3,10 @@ use std::process::Command;
 
 use anyhow::{Result, bail};
 
+use super::search;
 use crate::config::Config;
 use crate::git;
 use crate::hook;
-use crate::integration;
 
 pub fn run(repo_arg: &str) -> Result<()> {
     let config = Config::load()?;
@@ -54,7 +54,7 @@ fn choose_base(base_dirs: &[PathBuf]) -> Result<PathBuf> {
         .iter()
         .map(|p| p.to_string_lossy().to_string())
         .collect();
-    let selected = integration::select_one(&choices, "Choose base directory", None)?;
+    let selected = search::select_one(&choices, "Choose base directory", None)?;
     match selected {
         Some(s) => Ok(PathBuf::from(s)),
         None => bail!("No base directory selected"),

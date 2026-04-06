@@ -2,21 +2,9 @@ use std::collections::BTreeMap;
 
 use anyhow::Result;
 
+use super::search::{self, BOLD, DIM, GROUP_COLORS, RESET};
 use crate::config::Config;
 use crate::repo_source::{self, Repo};
-
-// ANSI helpers
-const RESET: &str = "\x1b[0m";
-const DIM: &str = "\x1b[2m";
-const BOLD: &str = "\x1b[1m";
-
-const GROUP_COLORS: &[&str] = &[
-    "\x1b[48;5;24m\x1b[97m",  // dark blue
-    "\x1b[48;5;22m\x1b[97m",  // dark green
-    "\x1b[48;5;94m\x1b[97m",  // dark orange
-    "\x1b[48;5;30m\x1b[97m",  // teal
-    "\x1b[48;5;238m\x1b[97m", // dark gray
-];
 
 pub fn run(raw: bool) -> Result<()> {
     let config = Config::load()?;
@@ -35,7 +23,7 @@ pub fn run(raw: bool) -> Result<()> {
     let mut group_index: BTreeMap<String, usize> = BTreeMap::new();
 
     for repo in &repos {
-        let key = group_key(repo, has_multiple_bases);
+        let key = search::group_key_for(repo, has_multiple_bases);
         if let Some(&idx) = group_index.get(&key) {
             grouped[idx].1.push(repo);
         } else {
@@ -70,20 +58,7 @@ pub fn run(raw: bool) -> Result<()> {
         }
     }
 
-    println!("\n{}Total: {} repositories{}", DIM, repos.len(), RESET);
+    println!("\n{DIM}Total: {} repositories{RESET}", repos.len());
 
     Ok(())
-}
-
-fn group_key(repo: &Repo, has_multiple_bases: bool) -> String {
-    if has_multiple_bases {
-        let base_name = repo
-            .base
-            .file_name()
-            .map(|n| n.to_string_lossy().to_string())
-            .unwrap_or_default();
-        format!("{}/{}", base_name, repo.host)
-    } else {
-        repo.host.clone()
-    }
 }
