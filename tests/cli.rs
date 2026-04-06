@@ -4,11 +4,10 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-/// Set HOME for both Unix and Windows.
+/// Create a projj command with home directory override.
 fn projj_cmd(home: &std::path::Path) -> Command {
     let mut cmd = Command::cargo_bin("projj").unwrap();
-    cmd.env("HOME", home);
-    cmd.env("USERPROFILE", home);
+    cmd.env("PROJJ_HOME", home);
     cmd
 }
 

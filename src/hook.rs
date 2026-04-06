@@ -8,13 +8,13 @@ use crate::config::{Config, HookEntry};
 
 /// Repo context passed to hooks via stdin JSON and env vars.
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct RepoContext {
+pub struct HookContext {
     pub event: String,
-    pub repo: RepoInfo,
+    pub repo: HookRepoInfo,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct RepoInfo {
+pub struct HookRepoInfo {
     pub path: String,
     pub host: String,
     pub owner: String,
@@ -43,9 +43,9 @@ pub fn run_hooks(config: &Config, event: &str, repo_key: &str, cwd: &Path) -> Re
         ("", "", repo_key)
     };
 
-    let context = RepoContext {
+    let context = HookContext {
         event: event.to_string(),
-        repo: RepoInfo {
+        repo: HookRepoInfo {
             path: cwd.to_string_lossy().to_string(),
             host: host.to_string(),
             owner: owner.to_string(),
@@ -102,7 +102,7 @@ fn run_script(
     }
 
     // Parse stdin JSON to also set PROJJ_* env vars
-    if let Ok(ctx) = serde_json::from_str::<RepoContext>(stdin_json) {
+    if let Ok(ctx) = serde_json::from_str::<HookContext>(stdin_json) {
         cmd.env("PROJJ_EVENT", &ctx.event);
         cmd.env("PROJJ_REPO_PATH", &ctx.repo.path);
         cmd.env("PROJJ_REPO_HOST", &ctx.repo.host);

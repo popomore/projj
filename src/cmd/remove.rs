@@ -7,7 +7,7 @@ use dialoguer::Input;
 use crate::config::Config;
 use crate::hook;
 use crate::repo_source;
-use crate::search;
+use crate::select;
 
 pub fn run(keyword: &str) -> Result<()> {
     let config = Config::load()?;
@@ -22,7 +22,7 @@ pub fn run(keyword: &str) -> Result<()> {
         .iter()
         .map(|r| r.path.to_string_lossy().to_string())
         .collect();
-    let selected = search::select_one(&paths, "Select repository to remove", Some(keyword))?;
+    let selected = select::select_one(&paths, "Select repository to remove", Some(keyword))?;
 
     let Some(target) = selected else {
         bail!("No repository selected")

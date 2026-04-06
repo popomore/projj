@@ -4,7 +4,7 @@ mod config;
 mod git;
 mod hook;
 mod repo_source;
-mod search;
+mod select;
 
 use anyhow::Result;
 use clap::{CommandFactory, Parser, Subcommand};

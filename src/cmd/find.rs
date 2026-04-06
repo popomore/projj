@@ -2,7 +2,7 @@ use anyhow::Result;
 
 use crate::config::Config;
 use crate::repo_source::{self, Repo};
-use crate::search;
+use crate::select;
 
 pub fn run(keyword: Option<&str>) -> Result<()> {
     let config = Config::load()?;
@@ -27,13 +27,13 @@ pub fn run(keyword: Option<&str>) -> Result<()> {
 
     if matched.len() == 1 {
         let repo = &matched[0];
-        search::print_repo_info(repo, has_multiple_bases);
+        select::print_repo_info(repo, has_multiple_bases);
         println!("{}", repo.path.display());
         return Ok(());
     }
 
-    let display_items = search::build_indexed_items(&matched, has_multiple_bases);
-    let selected = search::fzf_indexed(&display_items, keyword)?;
+    let display_items = select::build_indexed_items(&matched, has_multiple_bases);
+    let selected = select::fzf_indexed(&display_items, keyword)?;
     match selected {
         Some(idx) => println!("{}", matched[idx].path.display()),
         None => std::process::exit(1),

@@ -9,7 +9,7 @@ fn bin_path() -> String {
 }
 
 fn spawn_projj(home: &std::path::Path, args: &str) -> rexpect::session::PtySession {
-    let cmd = format!("env HOME={} {} {args}", home.display(), bin_path());
+    let cmd = format!("env PROJJ_HOME={} {} {args}", home.display(), bin_path());
     rexpect::spawn(&cmd, Some(10000)).unwrap()
 }
 

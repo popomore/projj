@@ -74,24 +74,6 @@ impl Config {
         }
     }
 
-    /// Choose a base directory. Returns directly if only one,
-    /// otherwise prompts user to select via fzf/dialoguer.
-    pub fn choose_base(&self) -> anyhow::Result<PathBuf> {
-        let dirs = self.base_dirs();
-        if dirs.len() == 1 {
-            return Ok(dirs[0].clone());
-        }
-        let choices: Vec<String> = dirs
-            .iter()
-            .map(|p| p.to_string_lossy().to_string())
-            .collect();
-        let selected = crate::search::select_one(&choices, "Choose base directory", None)?;
-        match selected {
-            Some(s) => Ok(PathBuf::from(s)),
-            None => anyhow::bail!("No base directory selected"),
-        }
-    }
-
     /// Resolve a script name with three-level lookup:
     /// 1. `scripts` table in config
     /// 2. Executable file in `~/.projj/hooks/`
@@ -139,6 +121,10 @@ impl Config {
 }
 
 pub fn config_dir() -> PathBuf {
+    // PROJJ_HOME overrides home directory detection (useful for testing)
+    if let Ok(home) = std::env::var("PROJJ_HOME") {
+        return PathBuf::from(home).join(".projj");
+    }
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
         .join(".projj")
@@ -344,18 +330,6 @@ command = "clean"
         let path = PathBuf::from("/nonexistent/config.toml");
         let result = Config::load_from(&path);
         assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_choose_base_single() {
-        let config = Config {
-            base: BaseDir::Single("/tmp/projj".to_string()),
-            platform: "github.com".to_string(),
-            scripts: HashMap::new(),
-            hooks: vec![],
-        };
-        let base = config.choose_base().unwrap();
-        assert_eq!(base, PathBuf::from("/tmp/projj"));
     }
 
     #[test]
