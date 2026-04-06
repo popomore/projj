@@ -11,6 +11,11 @@ fn projj_cmd(home: &std::path::Path) -> Command {
     cmd
 }
 
+/// Convert path to forward slashes for TOML (Windows backslashes break TOML parsing).
+fn toml_path(path: &std::path::Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
+}
+
 /// Create a temp config dir with a `config.toml` and return the dir.
 fn setup_config(base_dir: &std::path::Path) -> TempDir {
     let config_dir = tempfile::tempdir().unwrap();
@@ -25,7 +30,7 @@ hello = "echo hello"
 event = "post_add"
 command = "true"
 "#,
-        base_dir.display()
+        toml_path(base_dir)
     );
     fs::write(config_dir.path().join("config.toml"), config_content).unwrap();
     config_dir
@@ -74,7 +79,7 @@ fn test_list_pretty() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -98,7 +103,7 @@ fn test_find_single_match() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -119,7 +124,7 @@ fn test_find_no_match() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -155,7 +160,7 @@ fn test_run_named_script() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n\n[scripts]\nhello = \"echo from-script\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -177,7 +182,7 @@ fn test_run_all() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -200,7 +205,7 @@ fn test_run_all_with_match() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -307,7 +312,7 @@ fn test_add_existing_repo() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -321,6 +326,7 @@ fn test_add_existing_repo() {
 
 // ── projj add (local move) ──
 
+#[cfg(unix)]
 #[test]
 fn test_add_local_repo() {
     let base = tempfile::tempdir().unwrap();
@@ -358,7 +364,7 @@ fn test_add_local_repo() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -396,8 +402,8 @@ fn test_list_multiple_bases() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = [\"{}\", \"{}\"]\nplatform = \"github.com\"\n",
-        base1.path().display(),
-        base2.path().display()
+        toml_path(base1.path()),
+        toml_path(base2.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -431,7 +437,7 @@ fn test_find_case_insensitive() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -439,7 +445,7 @@ fn test_find_case_insensitive() {
         .args(["find", "myrepo"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("Owner/MyRepo"));
+        .stdout(predicate::str::contains("Owner").and(predicate::str::contains("MyRepo")));
 }
 
 // ── projj add with hooks ──
@@ -454,16 +460,21 @@ fn test_add_existing_with_post_add_hook() {
     fs::create_dir_all(&projj_dir).unwrap();
 
     let marker = base.path().join("hook_ran");
+    let marker_path = toml_path(&marker);
+    let hook_cmd = if cfg!(windows) {
+        format!("echo. > {marker_path}")
+    } else {
+        format!("touch {marker_path}")
+    };
     let config_content = format!(
         r#"base = "{}"
 platform = "github.com"
 
 [[hooks]]
 event = "post_add"
-command = "touch {}"
+command = "{hook_cmd}"
 "#,
-        base.path().display(),
-        marker.display()
+        toml_path(base.path()),
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -477,6 +488,7 @@ command = "touch {}"
 
 // ── projj run with hooks dir ──
 
+#[cfg(unix)]
 #[test]
 fn test_run_from_hooks_dir() {
     let home = tempfile::tempdir().unwrap();
@@ -484,13 +496,18 @@ fn test_run_from_hooks_dir() {
     let hooks_dir = projj_dir.join("hooks");
     fs::create_dir_all(&hooks_dir).unwrap();
 
-    // Create a hook script
-    let script_path = hooks_dir.join("greet");
-    fs::write(&script_path, "#!/bin/bash\necho hello-from-hook").unwrap();
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(&script_path, fs::Permissions::from_mode(0o755)).unwrap();
+    // Create a hook script (platform-specific)
+    if cfg!(windows) {
+        let script_path = hooks_dir.join("greet.bat");
+        fs::write(&script_path, "@echo off\necho hello-from-hook").unwrap();
+    } else {
+        let script_path = hooks_dir.join("greet");
+        fs::write(&script_path, "#!/bin/bash\necho hello-from-hook").unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            fs::set_permissions(&script_path, fs::Permissions::from_mode(0o755)).unwrap();
+        }
     }
 
     let config_content = "base = \"/tmp\"\nplatform = \"github.com\"\n";
@@ -547,7 +564,7 @@ fn test_list_no_color() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -577,7 +594,7 @@ fn test_find_no_color() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
@@ -610,7 +627,7 @@ fn test_list_no_color_raw_unchanged() {
     fs::create_dir_all(&projj_dir).unwrap();
     let config_content = format!(
         "base = \"{}\"\nplatform = \"github.com\"\n",
-        base.path().display()
+        toml_path(base.path())
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
