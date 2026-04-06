@@ -1,0 +1,11 @@
+#!/bin/bash
+# Configure git user.name and user.email from hook env vars
+# Usage in config.toml:
+#   [[hooks]]
+#   event = "post_add"
+#   matcher = "github\\.com"
+#   command = "git_config_user"
+#   env = { PROJJ_GIT_NAME = "popomore", PROJJ_GIT_EMAIL = "me@example.com" }
+
+[ -n "$PROJJ_GIT_NAME" ] && git config user.name "$PROJJ_GIT_NAME"
+[ -n "$PROJJ_GIT_EMAIL" ] && git config user.email "$PROJJ_GIT_EMAIL"

@@ -4,4 +4,60 @@ cache.json
 .nyc_output/
 !test/fixtures/hook/.projj/cache.json
 !test/fixtures/multiple-directory/.projj/cache.json
-.github/
+# >>> mise-hook >>>
+# AI tools
+.claude
+.worktrees
+.cursor/
+.cursorignore
+.cursorrules
+
+# OS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+
+# Node
+node_modules/
+dist/
+*.log
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+
+# Go
+vendor/
+
+# Build
+build/
+out/
+
+# Env
+.env
+.env.local
+.env.*.local
+# <<< mise-hook <<<
+
+
+# Added by cargo
+
+/target

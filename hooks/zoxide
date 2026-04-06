@@ -1,0 +1,3 @@
+#!/bin/bash
+# Register repo path with zoxide for quick navigation
+command -v zoxide >/dev/null && zoxide add "$PROJJ_REPO_PATH"
