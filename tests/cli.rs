@@ -4,6 +4,14 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
+/// Set HOME for both Unix and Windows.
+fn projj_cmd(home: &std::path::Path) -> Command {
+    let mut cmd = Command::cargo_bin("projj").unwrap();
+    cmd.env("HOME", home);
+    cmd.env("USERPROFILE", home);
+    cmd
+}
+
 /// Create a temp config dir with a `config.toml` and return the dir.
 fn setup_config(base_dir: &std::path::Path) -> TempDir {
     let config_dir = tempfile::tempdir().unwrap();
@@ -49,9 +57,7 @@ fn test_list_raw() {
     )
     .unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["list", "--raw"])
         .assert()
         .success()
@@ -73,9 +79,7 @@ fn test_list_pretty() {
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["list"])
         .assert()
         .success()
@@ -99,9 +103,7 @@ fn test_find_single_match() {
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["find", "projj"])
         .assert()
         .success()
@@ -122,9 +124,7 @@ fn test_find_no_match() {
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["find", "nonexistent"])
         .assert()
         .failure()
@@ -141,9 +141,7 @@ fn test_run_inline_command() {
     let config_content = "base = \"/tmp\"\nplatform = \"github.com\"\n";
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["run", "echo hello-projj"])
         .assert()
         .success()
@@ -162,9 +160,7 @@ fn test_run_named_script() {
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["run", "hello"])
         .assert()
         .success()
@@ -186,9 +182,7 @@ fn test_run_all() {
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["run", "echo hi", "--all"])
         .assert()
         .success()
@@ -211,9 +205,7 @@ fn test_run_all_with_match() {
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["run", "echo hi", "--all", "--match", "teamA"])
         .assert()
         .success()
@@ -229,9 +221,7 @@ fn test_run_invalid_match_regex() {
     let config_content = "base = \"/tmp\"\nplatform = \"github.com\"\n";
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["run", "echo hi", "--all", "--match", "[invalid"])
         .assert()
         .failure()
@@ -244,9 +234,7 @@ fn test_run_invalid_match_regex() {
 fn test_no_config() {
     let home = tempfile::tempdir().unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["list"])
         .assert()
         .failure()
@@ -324,9 +312,7 @@ fn test_add_existing_repo() {
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["add", "popomore/projj"])
         .assert()
         .success()
@@ -377,9 +363,7 @@ fn test_add_local_repo() {
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["add", &repo_dir.to_string_lossy()])
         .assert()
         .success()
@@ -416,9 +400,7 @@ fn test_list_multiple_bases() {
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
     // Pretty list should show group headers
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["list"])
         .assert()
         .success()
@@ -427,9 +409,7 @@ fn test_list_multiple_bases() {
         .stdout(predicate::str::contains("Total: 2 repositories"));
 
     // Raw list
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["list", "--raw"])
         .assert()
         .success()
@@ -453,9 +433,7 @@ fn test_find_case_insensitive() {
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["find", "myrepo"])
         .assert()
         .success()
@@ -487,9 +465,7 @@ command = "touch {}"
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["add", "popomore/projj"])
         .assert()
         .success();
@@ -518,9 +494,7 @@ fn test_run_from_hooks_dir() {
     let config_content = "base = \"/tmp\"\nplatform = \"github.com\"\n";
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["run", "greet"])
         .assert()
         .success()
@@ -532,9 +506,7 @@ fn test_run_from_hooks_dir() {
 #[test]
 fn test_no_config_find() {
     let home = tempfile::tempdir().unwrap();
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["find", "foo"])
         .assert()
         .failure()
@@ -544,9 +516,7 @@ fn test_no_config_find() {
 #[test]
 fn test_no_config_add() {
     let home = tempfile::tempdir().unwrap();
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["add", "owner/repo"])
         .assert()
         .failure()
@@ -556,9 +526,7 @@ fn test_no_config_add() {
 #[test]
 fn test_no_config_run() {
     let home = tempfile::tempdir().unwrap();
-    Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    projj_cmd(home.path())
         .args(["run", "echo hi"])
         .assert()
         .failure()
@@ -581,9 +549,7 @@ fn test_list_no_color() {
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    let output = Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    let output = projj_cmd(home.path())
         .env("NO_COLOR", "1")
         .args(["list"])
         .output()
@@ -613,9 +579,7 @@ fn test_find_no_color() {
     );
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
-    let output = Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    let output = projj_cmd(home.path())
         .env("NO_COLOR", "1")
         .args(["find", "projj"])
         .output()
@@ -649,16 +613,12 @@ fn test_list_no_color_raw_unchanged() {
     fs::write(projj_dir.join("config.toml"), config_content).unwrap();
 
     // --raw should be identical with and without NO_COLOR
-    let with_color = Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    let with_color = projj_cmd(home.path())
         .args(["list", "--raw"])
         .output()
         .unwrap();
 
-    let without_color = Command::cargo_bin("projj")
-        .unwrap()
-        .env("HOME", home.path())
+    let without_color = projj_cmd(home.path())
         .env("NO_COLOR", "1")
         .args(["list", "--raw"])
         .output()
