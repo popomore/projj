@@ -65,7 +65,7 @@ if [ -n "$ignored_files" ]; then
       colored=$(color_size "$kb" "$size")
       echo -e "SORT${kb} ${DIM}${dir}(${RESET}${colored}${DIM}, ${pct}%)${RESET}"
     fi
-  done | sort -t'T' -k1 -rn | sed 's/SORT[0-9]* //' | head -3 | tr '\n' ' ')
+  done | sort -t'T' -k2 -rn | sed 's/SORT[0-9]* //' | head -3 | tr '\n' ' ')
   echo -e "📦 ${colored_total} total | 🗃️  .git ${colored_git} | ${dirty_str} | 🚫 ${ignored_count} ignored: ${ignored_dirs}"
 else
   echo -e "📦 ${colored_total} total | 🗃️  .git ${colored_git} | ${dirty_str} | ✨ 0 ignored"
