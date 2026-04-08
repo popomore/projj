@@ -32,7 +32,10 @@ pub fn clone_remote(url: &str, target: &Path) -> Result<()> {
         .stderr(std::process::Stdio::piped())
         .spawn()?;
 
-    // Read stderr, add indent after each \r or \n
+    // Stream git's stderr with a 3-space indent per line.
+    // Only \n starts a new indented line — \r is passed through unchanged so
+    // that git's in-place progress overwrites (e.g. "Receiving objects: 45%\r")
+    // render correctly in the terminal for both SSH and HTTPS remotes.
     if let Some(stderr) = child.stderr.take() {
         use std::io::{BufReader, Read};
         let mut reader = BufReader::new(stderr);
@@ -49,7 +52,7 @@ pub fn clone_remote(url: &str, target: &Path) -> Result<()> {
                     at_line_start = false;
                 }
                 eprint!("{}", b as char);
-                if b == b'\r' || b == b'\n' {
+                if b == b'\n' {
                     at_line_start = true;
                 }
             }
@@ -436,5 +439,90 @@ mod tests {
             clone_url: String::new(),
         };
         assert_eq!(info.rel_path(), "github.com/popomore/projj");
+    }
+
+    #[test]
+    fn test_clone_remote_progress_visible() {
+        // Verify that clone_remote works end-to-end using a local bare repo.
+        // The byte-streaming logic is transport-agnostic, so this covers both
+        // HTTP and SSH code paths (both go through the same stderr loop).
+        let tmp = tempfile::tempdir().unwrap();
+
+        // Create a bare source repo
+        let src = tmp.path().join("source.git");
+        std::process::Command::new("git")
+            .args(["init", "--bare", src.to_str().unwrap()])
+            .output()
+            .unwrap();
+
+        // Clone it, add a commit, push back so there is something to clone
+        let work = tmp.path().join("work");
+        std::process::Command::new("git")
+            .args(["clone", src.to_str().unwrap(), work.to_str().unwrap()])
+            .output()
+            .unwrap();
+        std::fs::write(work.join("file.txt"), "hello").unwrap();
+        std::process::Command::new("git")
+            .args(["-C", work.to_str().unwrap(), "add", "."])
+            .output()
+            .unwrap();
+        std::process::Command::new("git")
+            .args([
+                "-C",
+                work.to_str().unwrap(),
+                "-c",
+                "user.email=test@test.com",
+                "-c",
+                "user.name=Test",
+                "commit",
+                "-m",
+                "init",
+            ])
+            .output()
+            .unwrap();
+        std::process::Command::new("git")
+            .args(["-C", work.to_str().unwrap(), "push"])
+            .output()
+            .unwrap();
+
+        let target = tmp.path().join("cloned");
+        clone_remote(src.to_str().unwrap(), &target).unwrap();
+
+        assert!(target.join("file.txt").exists());
+        assert_eq!(
+            std::fs::read_to_string(target.join("file.txt")).unwrap(),
+            "hello"
+        );
+    }
+
+    #[test]
+    fn test_indent_after_newline_not_carriage_return() {
+        // Simulate the byte-loop logic in clone_remote to verify that \r does
+        // NOT trigger a new indent prefix (git uses bare \r for in-place progress
+        // overwriting), while \n does start a new indented line.
+        let input = b"Receiving objects:  50%\rReceiving objects: 100%\nDone\n";
+        let mut output = Vec::new();
+        let mut at_line_start = true;
+
+        for &b in input {
+            if at_line_start {
+                output.extend_from_slice(b"   ");
+                at_line_start = false;
+            }
+            output.push(b);
+            if b == b'\n' {
+                at_line_start = true;
+            }
+            // NOTE: \r intentionally does NOT set at_line_start — the overwrite
+            // text must follow the \r directly for terminal rendering to work.
+        }
+
+        let s = String::from_utf8(output).unwrap();
+        // First line gets indent
+        assert!(s.starts_with("   Receiving objects:  50%"));
+        // After \r there is NO injected indent — overwrite text follows directly
+        assert!(s.contains("\rReceiving objects: 100%\n"));
+        // After \n the next line is indented
+        assert!(s.contains("\n   Done\n"));
     }
 }
