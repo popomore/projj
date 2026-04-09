@@ -114,7 +114,7 @@ if [ -n "$ignored_files" ]; then
       fi
       colored=$(color_size "$kb" "$size")
       if [ "$mark" = "p" ]; then
-        label="${key}/…"
+        label="${key}📂"
       else
         label="$key"
       fi
