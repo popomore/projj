@@ -10,7 +10,11 @@
 #   projj run clean -- --force --yes                 # non-interactive, all
 #   projj run clean -- --force <name>...             # only these, no prompt
 
-set -u
+# NOTE: target bash 3.2 (macOS default). Do NOT use:
+#   - `set -u` (empty-array expansion is an unbound-var error in 3.2)
+#   - `mapfile` / `readarray` (bash 4+)
+#   - `declare -A` associative arrays
+# Use `while read` loops and explicit `${#arr[@]}` guards instead.
 
 # Colors (respect NO_COLOR)
 if [ -z "${NO_COLOR:-}" ]; then
@@ -71,15 +75,13 @@ if ! git rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 # Collect ignored top-level entries via git. --directory makes git emit dir
-# names (with trailing slash) instead of listing every file inside.
-mapfile -t RAW < <(git ls-files --others --ignored --exclude-standard --directory 2>/dev/null)
-
-# Keep only top-level entries (no nested path separators beyond trailing slash)
-# and strip trailing slash.
+# names (with trailing slash) instead of listing every file inside. We build
+# CANDIDATES directly from the stream to avoid `mapfile` (bash 4+).
 CANDIDATES=()
-for entry in "${RAW[@]}"; do
+while IFS= read -r entry; do
   # Strip trailing slash
   name="${entry%/}"
+  [ -z "$name" ] && continue
   # Skip if it contains a slash (not top-level)
   case "$name" in
     */*) continue ;;
@@ -87,7 +89,7 @@ for entry in "${RAW[@]}"; do
   # Must still exist (git may report stale entries)
   [ -e "$name" ] || continue
   CANDIDATES+=("$name")
-done
+done < <(git ls-files --others --ignored --exclude-standard --directory 2>/dev/null)
 
 # Apply filter (positional args). Simple name match (exact or shell glob).
 if [ ${#FILTERS[@]} -gt 0 ]; then
