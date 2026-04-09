@@ -56,7 +56,7 @@ projj init                              # one-time setup
 projj add popomore/projj               # clone → ~/projj/github.com/popomore/projj
 projj add git@gitlab.com:team/app.git   # clone → ~/projj/gitlab.com/team/app
 p projj                                 # jump to repo instantly (shell function)
-projj run repo-status --all             # batch operations across all repos
+projj run status --all                  # batch operations across all repos
 ```
 
 ### Shell Integration
@@ -122,7 +122,7 @@ Run a task in the current directory, or all repos with `--all`.
 projj run "npm install"                             # raw command
 projj run update --all                              # named task in all repos
 projj run "git status" --all --match "SeeleAI"      # filter repos by regex
-projj run repo-status -- --detail                   # pass args to task after --
+projj run status -- --detail                        # pass args to task after --
 ```
 
 ### projj list [--raw]
@@ -200,7 +200,7 @@ chmod +x ~/.projj/tasks/notify
 ```bash
 projj run update --all                    # inline task
 projj run notify --all                    # task file
-projj run repo-status -- --detail         # pass arguments after --
+projj run status -- --detail              # pass arguments after --
 projj run "git log -5"                    # raw command (not a named task)
 ```
 
@@ -262,14 +262,14 @@ env = { GIT_USER_NAME = "Other Name", GIT_USER_EMAIL = "other@corp.com" }
 
 Both are optional. Skips if not set.
 
-#### repo-status
+#### status
 
 Shows disk usage, git status, and ignored files for a repo.
 
 ```bash
-projj run repo-status                   # current repo
-projj run repo-status --all             # all repos (quick summary)
-projj run repo-status -- --detail       # include ignored files breakdown
+projj run status                   # current repo
+projj run status --all             # all repos (quick summary)
+projj run status -- --detail       # include ignored files breakdown
 ```
 
 Output example:
@@ -277,9 +277,12 @@ Output example:
 ```text
 📦 1.1G total | 🗃️  .git 2.0M | ✓ clean
 📦 1.1G total | 🗃️  .git 2.0M | ✓ clean | 🚫 15437 ignored: target(1.1G, 99%)
+📦 6.3M total | 🗃️  .git 2.9M | ✎ 22 dirty | 🚫 5 ignored: .claude(1.3M, 21%) skills📂(852K, 13%)
 ```
 
-Colors by size: green (<100M), yellow (100M–1G), red (>1G). Respects `NO_COLOR`.
+Colors by size: green (<100M), yellow (100M–1G), red (>1G). Respects `NO_COLOR`. In the ignored breakdown, a trailing 📂 marks a bucket where only some files inside the top-level directory are ignored (e.g. `skills📂` means "part of `skills/`"), while a bare name like `target` means the whole directory is ignored.
+
+> **Deprecated**: the previous name `repo-status` still works but prints a warning to stderr and delegates to `status`. It will be removed in a future release — please switch to `projj run status`.
 
 #### clean
 

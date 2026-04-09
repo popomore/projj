@@ -71,10 +71,14 @@ macro_rules! builtin {
 }
 
 /// Registry of built-in tasks. Add new entries here.
+///
+/// `repo-status` is retained as a deprecation shim that execs `status`; it
+/// will be removed in a future release.
 const BUILTINS: &[(&str, &[u8])] = &[
     builtin!("clean"),
     builtin!("git-config-user"),
     builtin!("repo-status"),
+    builtin!("status"),
     builtin!("zoxide"),
 ];
 
