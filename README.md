@@ -281,6 +281,31 @@ Output example:
 
 Colors by size: green (<100M), yellow (100M–1G), red (>1G). Respects `NO_COLOR`.
 
+#### clean
+
+Removes git-ignored top-level directories (`target/`, `node_modules/`, `dist/`, ...) — the natural follow-up to `repo-status -- --detail`. Only ever touches paths reported by `git ls-files --others --ignored --exclude-standard --directory`, so untracked new files and tracked changes are never at risk.
+
+```bash
+projj run clean                                  # dry-run: list all ignored top-level dirs
+projj run clean -- target                        # dry-run, filter by name/glob
+projj run clean -- --force                       # interactive: y/N/a/q per dir
+projj run clean -- --force --yes                 # non-interactive, remove all
+projj run clean -- --force target node_modules   # remove only these, no prompt
+projj run clean --all                            # dry-run across all repos
+projj run clean --all -- --force                 # interactive across all repos
+```
+
+Output example:
+
+```text
+🧹 would remove (2 items, 1.4G total):
+  target        1.1G
+  node_modules  340M
+tip: projj run clean -- --force   to remove interactively
+```
+
+Interactive prompts: `y` yes, `n`/enter skip, `a` yes to all remaining, `q` quit. If stdin is not a tty and `--yes` was not passed, the script refuses to delete and prints the dry-run list instead. If you define `clean` in your `[tasks]` table, it overrides this built-in.
+
 ## Hooks
 
 Hooks trigger tasks automatically at repo lifecycle events. They are the glue between events and tasks.

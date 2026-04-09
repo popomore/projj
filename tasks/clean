@@ -1,0 +1,227 @@
+#!/bin/bash
+# Remove git-ignored top-level directories (target/, node_modules/, dist/, ...).
+# Safe by default: dry-run unless --force. Only ever deletes paths reported by
+# `git ls-files --others --ignored --exclude-standard --directory`.
+#
+# Usage:
+#   projj run clean                                  # dry-run, list all
+#   projj run clean -- <name>...                     # dry-run, only matching
+#   projj run clean -- --force                       # interactive: y/N per item
+#   projj run clean -- --force --yes                 # non-interactive, all
+#   projj run clean -- --force <name>...             # only these, no prompt
+
+# NOTE: target bash 3.2 (macOS default). Do NOT use:
+#   - `set -u` (empty-array expansion is an unbound-var error in 3.2)
+#   - `mapfile` / `readarray` (bash 4+)
+#   - `declare -A` associative arrays
+# Use `while read` loops and explicit `${#arr[@]}` guards instead.
+
+# Colors (respect NO_COLOR)
+if [ -z "${NO_COLOR:-}" ]; then
+  DIM="\033[2m"
+  RESET="\033[0m"
+  GREEN="\033[32m"
+  YELLOW="\033[33m"
+  RED="\033[31m"
+else
+  DIM="" RESET="" GREEN="" YELLOW="" RED=""
+fi
+
+color_size() {
+  local kb=$1 size=$2
+  if [ "$kb" -ge 1048576 ] 2>/dev/null; then
+    printf '%b%s%b' "$RED" "$size" "$RESET"
+  elif [ "$kb" -ge 102400 ] 2>/dev/null; then
+    printf '%b%s%b' "$YELLOW" "$size" "$RESET"
+  else
+    printf '%b%s%b' "$GREEN" "$size" "$RESET"
+  fi
+}
+
+human_kb() {
+  # Convert KB to human-readable like du -h
+  local kb=$1
+  if [ "$kb" -ge 1048576 ] 2>/dev/null; then
+    awk -v k="$kb" 'BEGIN { printf "%.1fG", k/1048576 }'
+  elif [ "$kb" -ge 1024 ] 2>/dev/null; then
+    awk -v k="$kb" 'BEGIN { printf "%.0fM", k/1024 }'
+  else
+    printf '%dK' "$kb"
+  fi
+}
+
+# Parse args
+FORCE=false
+YES=false
+FILTERS=()
+for arg in "$@"; do
+  case "$arg" in
+    -f|--force) FORCE=true ;;
+    -y|--yes)   YES=true ;;
+    -h|--help)
+      sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+      exit 0 ;;
+    -*)
+      echo "clean: unknown option: $arg" >&2
+      exit 2 ;;
+    *) FILTERS+=("$arg") ;;
+  esac
+done
+
+# Must be inside a git repo
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  echo -e "${DIM}clean: not a git repo, skipping${RESET}"
+  exit 0
+fi
+
+# Collect ignored top-level entries via git. --directory makes git emit dir
+# names (with trailing slash) instead of listing every file inside. We build
+# CANDIDATES directly from the stream to avoid `mapfile` (bash 4+).
+CANDIDATES=()
+while IFS= read -r entry; do
+  # Strip trailing slash
+  name="${entry%/}"
+  [ -z "$name" ] && continue
+  # Skip if it contains a slash (not top-level)
+  case "$name" in
+    */*) continue ;;
+  esac
+  # Must still exist (git may report stale entries)
+  [ -e "$name" ] || continue
+  CANDIDATES+=("$name")
+done < <(git ls-files --others --ignored --exclude-standard --directory 2>/dev/null)
+
+# Apply filter (positional args). Simple name match (exact or shell glob).
+if [ ${#FILTERS[@]} -gt 0 ]; then
+  FILTERED=()
+  for name in "${CANDIDATES[@]}"; do
+    for pat in "${FILTERS[@]}"; do
+      # shellcheck disable=SC2053
+      if [[ "$name" == $pat ]]; then
+        FILTERED+=("$name")
+        break
+      fi
+    done
+  done
+  CANDIDATES=("${FILTERED[@]}")
+fi
+
+if [ ${#CANDIDATES[@]} -eq 0 ]; then
+  echo -e "${GREEN}✨ nothing to clean${RESET}"
+  exit 0
+fi
+
+# Measure sizes (KB) for each candidate.
+SIZES_KB=()
+TOTAL_KB=0
+for name in "${CANDIDATES[@]}"; do
+  kb=$(du -sk "$name" 2>/dev/null | cut -f1)
+  [ -z "$kb" ] && kb=0
+  SIZES_KB+=("$kb")
+  TOTAL_KB=$((TOTAL_KB + kb))
+done
+
+# Determine column width for neat output
+MAXLEN=0
+for name in "${CANDIDATES[@]}"; do
+  [ ${#name} -gt "$MAXLEN" ] && MAXLEN=${#name}
+done
+
+print_list_line() {
+  local name=$1 kb=$2
+  local size
+  size=$(human_kb "$kb")
+  local colored
+  colored=$(color_size "$kb" "$size")
+  printf '  %-*s  %b\n' "$MAXLEN" "$name" "$colored"
+}
+
+# --- Dry-run (default) ---
+if [ "$FORCE" = false ]; then
+  total_h=$(human_kb "$TOTAL_KB")
+  total_colored=$(color_size "$TOTAL_KB" "$total_h")
+  echo -e "🧹 would remove (${#CANDIDATES[@]} items, ${total_colored} total):"
+  for i in "${!CANDIDATES[@]}"; do
+    print_list_line "${CANDIDATES[$i]}" "${SIZES_KB[$i]}"
+  done
+  echo -e "${DIM}tip: projj run clean -- --force   to remove interactively${RESET}"
+  exit 0
+fi
+
+# --- Force mode: decide interactive vs non-interactive ---
+INTERACTIVE=true
+if [ "$YES" = true ] || [ ${#FILTERS[@]} -gt 0 ]; then
+  INTERACTIVE=false
+fi
+
+if [ "$INTERACTIVE" = true ]; then
+  # Need a tty to prompt. Probe /dev/tty since projj run may pipe its own stdin
+  # through. If neither stdin nor /dev/tty is usable, refuse.
+  have_tty=false
+  if [ -t 0 ]; then
+    have_tty=true
+  elif { : < /dev/tty; } 2>/dev/null; then
+    have_tty=true
+  fi
+  if [ "$have_tty" = false ]; then
+    echo -e "${YELLOW}clean: stdin is not a tty; refusing to delete without --yes${RESET}" >&2
+    echo -e "${DIM}tip: re-run with --yes, or pass explicit names to skip prompting${RESET}" >&2
+    echo >&2
+    total_h=$(human_kb "$TOTAL_KB")
+    total_colored=$(color_size "$TOTAL_KB" "$total_h")
+    echo -e "🧹 would remove (${#CANDIDATES[@]} items, ${total_colored} total):" >&2
+    for i in "${!CANDIDATES[@]}"; do
+      print_list_line "${CANDIDATES[$i]}" "${SIZES_KB[$i]}" >&2
+    done
+    exit 1
+  fi
+fi
+
+# Remove selected items
+removed_count=0
+removed_kb=0
+yes_all=false
+
+# Choose input source for prompts
+read_from="/dev/tty"
+[ -r /dev/tty ] || read_from="/dev/stdin"
+
+for i in "${!CANDIDATES[@]}"; do
+  name="${CANDIDATES[$i]}"
+  kb="${SIZES_KB[$i]}"
+  size_h=$(human_kb "$kb")
+  size_colored=$(color_size "$kb" "$size_h")
+
+  do_remove=false
+  if [ "$INTERACTIVE" = false ] || [ "$yes_all" = true ]; then
+    do_remove=true
+  else
+    # Prompt
+    printf 'remove %b (%b)? [y/N/a/q] ' "$name" "$size_colored" >&2
+    if ! IFS= read -r reply < "$read_from"; then
+      reply="q"
+    fi
+    case "$reply" in
+      y|Y|yes|YES) do_remove=true ;;
+      a|A|all|ALL) do_remove=true; yes_all=true ;;
+      q|Q|quit|QUIT)
+        echo -e "${DIM}aborted${RESET}" >&2
+        break ;;
+      *) do_remove=false ;;
+    esac
+  fi
+
+  if [ "$do_remove" = true ]; then
+    rm -rf -- "$name"
+    removed_count=$((removed_count + 1))
+    removed_kb=$((removed_kb + kb))
+  fi
+done
+
+if [ "$removed_count" -gt 0 ]; then
+  reclaimed_h=$(human_kb "$removed_kb")
+  reclaimed_colored=$(color_size "$removed_kb" "$reclaimed_h")
+  echo -e "${GREEN}✓${RESET} removed ${removed_count} items, reclaimed ${reclaimed_colored}"
+else
+  echo -e "${DIM}nothing removed${RESET}"
+fi
