@@ -53,19 +53,45 @@ fi
 ignored_files=$(git ls-files --others --ignored --exclude-standard 2>/dev/null)
 if [ -n "$ignored_files" ]; then
   ignored_count=$(echo "$ignored_files" | wc -l | tr -d ' ')
-  ignored_dirs=$(echo "$ignored_files" | sed 's|/.*||' | sort -u | while read -r dir; do
-    if [ -d "$dir" ]; then
-      kb=$(du -sk "$dir" 2>/dev/null | cut -f1)
-      size=$(du -sh "$dir" 2>/dev/null | cut -f1)
-      if [ "$total_kb" -gt 0 ] 2>/dev/null; then
-        pct=$((kb * 100 / total_kb))
-      else
-        pct=0
-      fi
-      colored=$(color_size "$kb" "$size")
-      echo -e "SORT${kb} ${DIM}${dir}(${RESET}${colored}${DIM}, ${pct}%)${RESET}"
+  # Use --directory so fully-ignored subtrees collapse to a single path while
+  # individual ignored files in otherwise-tracked dirs remain as leaves. Then
+  # du -sk each actual reported path and aggregate by top-level key. This
+  # avoids measuring a whole top-level dir (including its tracked files) just
+  # because one file inside is ignored — e.g. a stray .apk under skills/
+  # shouldn't make skills/ look like a huge ignored blob.
+  bucket_lines=$(git ls-files --others --ignored --exclude-standard --directory 2>/dev/null \
+    | while IFS= read -r path; do
+        path="${path%/}"
+        [ -z "$path" ] && continue
+        [ -e "$path" ] || continue
+        kb=$(du -sk -- "$path" 2>/dev/null | cut -f1)
+        [ -z "$kb" ] && kb=0
+        case "$path" in
+          */*) key="${path%%/*}" ;;
+          *)   key="$path" ;;
+        esac
+        printf '%s\t%s\n' "$kb" "$key"
+      done \
+    | awk -F'\t' '{ bucket[$2] += $1 } END { for (k in bucket) printf "%d\t%s\n", bucket[k], k }' \
+    | sort -rn \
+    | head -3)
+
+  ignored_dirs=$(printf '%s\n' "$bucket_lines" | while IFS=$'\t' read -r kb key; do
+    [ -z "$kb" ] && continue
+    size=$(awk -v k="$kb" 'BEGIN {
+      if (k >= 1048576)      printf "%.1fG", k/1048576
+      else if (k >= 1024)    printf "%.1fM", k/1024
+      else                   printf "%dK", k
+    }')
+    if [ "$total_kb" -gt 0 ] 2>/dev/null; then
+      pct=$((kb * 100 / total_kb))
+    else
+      pct=0
     fi
-  done | sort -t'T' -k2 -rn | sed 's/SORT[0-9]* //' | head -3 | tr '\n' ' ')
+    colored=$(color_size "$kb" "$size")
+    echo -ne "${DIM}${key}(${RESET}${colored}${DIM}, ${pct}%)${RESET} "
+  done)
+
   echo -e "📦 ${colored_total} total | 🗃️  .git ${colored_git} | ${dirty_str} | 🚫 ${ignored_count} ignored: ${ignored_dirs}"
 else
   echo -e "📦 ${colored_total} total | 🗃️  .git ${colored_git} | ${dirty_str} | ✨ 0 ignored"
