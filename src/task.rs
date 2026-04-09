@@ -72,6 +72,7 @@ macro_rules! builtin {
 
 /// Registry of built-in tasks. Add new entries here.
 const BUILTINS: &[(&str, &[u8])] = &[
+    builtin!("clean"),
     builtin!("git-config-user"),
     builtin!("repo-status"),
     builtin!("zoxide"),
