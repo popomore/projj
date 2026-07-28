@@ -15,7 +15,7 @@ pub fn run(script: &str, all: bool, match_pattern: Option<&str>, args: &[String]
     };
 
     if all {
-        let repos = repo_source::scan(&config.base_dirs())?;
+        let repos = repo_source::scan(&config.base_dirs(), &config.exclude_dirs())?;
 
         // Filter by --match if provided
         let matcher = match match_pattern {

@@ -30,19 +30,19 @@ impl Repo {
 
 /// Scan base directories for git repositories.
 /// Fixed depth: base/host/owner/repo/.git
-pub fn scan(base_dirs: &[PathBuf]) -> Result<Vec<Repo>> {
+pub fn scan(base_dirs: &[PathBuf], exclude: &[PathBuf]) -> Result<Vec<Repo>> {
     let mut repos = Vec::new();
     for base in base_dirs {
         if !base.exists() {
             continue;
         }
-        scan_base(base, &mut repos)?;
+        scan_base(base, exclude, &mut repos)?;
     }
     repos.sort_by(|a, b| a.path.cmp(&b.path));
     Ok(repos)
 }
 
-fn scan_base(base: &Path, repos: &mut Vec<Repo>) -> Result<()> {
+fn scan_base(base: &Path, exclude: &[PathBuf], repos: &mut Vec<Repo>) -> Result<()> {
     let base_path = base.to_path_buf();
     // Level 1: host (github.com, gitlab.com, ...)
     let Ok(hosts) = std::fs::read_dir(base) else {
@@ -54,7 +54,7 @@ fn scan_base(base: &Path, repos: &mut Vec<Repo>) -> Result<()> {
             continue;
         }
         let host_name = host_entry.file_name().to_string_lossy().to_string();
-        if host_name.starts_with('.') {
+        if host_name.starts_with('.') || exclude.iter().any(|e| e == &host_entry.path()) {
             continue;
         }
 
@@ -68,7 +68,7 @@ fn scan_base(base: &Path, repos: &mut Vec<Repo>) -> Result<()> {
                 continue;
             }
             let owner_name = owner_entry.file_name().to_string_lossy().to_string();
-            if owner_name.starts_with('.') {
+            if owner_name.starts_with('.') || exclude.iter().any(|e| e == &owner_entry.path()) {
                 continue;
             }
 
@@ -82,7 +82,7 @@ fn scan_base(base: &Path, repos: &mut Vec<Repo>) -> Result<()> {
                     continue;
                 }
                 let repo_name = repo_entry.file_name().to_string_lossy().to_string();
-                if repo_name.starts_with('.') {
+                if repo_name.starts_with('.') || exclude.iter().any(|e| e == &repo_entry.path()) {
                     continue;
                 }
 
@@ -211,7 +211,7 @@ mod tests {
     #[test]
     fn test_scan_empty_dir() {
         let dir = tempfile::tempdir().unwrap();
-        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()], &[]).unwrap();
         assert!(repos.is_empty());
     }
 
@@ -220,7 +220,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let repo_path = dir.path().join("github.com/popomore/projj/.git");
         std::fs::create_dir_all(&repo_path).unwrap();
-        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()], &[]).unwrap();
         assert_eq!(repos.len(), 1);
         assert_eq!(repos[0].host, "github.com");
         assert_eq!(repos[0].owner, "popomore");
@@ -233,8 +233,19 @@ mod tests {
         std::fs::create_dir_all(dir.path().join(".hidden/owner/repo/.git")).unwrap();
         std::fs::create_dir_all(dir.path().join("github.com/.hidden/repo/.git")).unwrap();
         std::fs::create_dir_all(dir.path().join("github.com/owner/.hidden/.git")).unwrap();
-        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()], &[]).unwrap();
         assert!(repos.is_empty());
+    }
+
+    #[test]
+    fn test_scan_skips_excluded_dirs() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("tries/x/y/.git")).unwrap();
+        std::fs::create_dir_all(dir.path().join("github.com/owner/repo/.git")).unwrap();
+        let exclude = vec![dir.path().join("tries")];
+        let repos = scan(&[dir.path().to_path_buf()], &exclude).unwrap();
+        assert_eq!(repos.len(), 1);
+        assert_eq!(repos[0].host, "github.com");
     }
 
     #[test]
@@ -242,13 +253,13 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         // No .git directory
         std::fs::create_dir_all(dir.path().join("github.com/owner/repo")).unwrap();
-        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()], &[]).unwrap();
         assert!(repos.is_empty());
     }
 
     #[test]
     fn test_scan_nonexistent_base() {
-        let repos = scan(&[PathBuf::from("/nonexistent/path")]).unwrap();
+        let repos = scan(&[PathBuf::from("/nonexistent/path")], &[]).unwrap();
         assert!(repos.is_empty());
     }
 
@@ -258,7 +269,7 @@ mod tests {
         let dir2 = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(dir1.path().join("github.com/a/repo1/.git")).unwrap();
         std::fs::create_dir_all(dir2.path().join("gitlab.com/b/repo2/.git")).unwrap();
-        let repos = scan(&[dir1.path().to_path_buf(), dir2.path().to_path_buf()]).unwrap();
+        let repos = scan(&[dir1.path().to_path_buf(), dir2.path().to_path_buf()], &[]).unwrap();
         assert_eq!(repos.len(), 2);
     }
 
@@ -268,7 +279,7 @@ mod tests {
         // A file where a host dir should be
         std::fs::write(dir.path().join("not-a-dir"), "").unwrap();
         std::fs::create_dir_all(dir.path().join("github.com/owner/repo/.git")).unwrap();
-        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()], &[]).unwrap();
         assert_eq!(repos.len(), 1);
     }
 
@@ -277,7 +288,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(dir.path().join("github.com")).unwrap();
         std::fs::write(dir.path().join("github.com/not-a-dir"), "").unwrap();
-        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()], &[]).unwrap();
         assert!(repos.is_empty());
     }
 
@@ -286,7 +297,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(dir.path().join("github.com/owner")).unwrap();
         std::fs::write(dir.path().join("github.com/owner/not-a-dir"), "").unwrap();
-        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()], &[]).unwrap();
         assert!(repos.is_empty());
     }
 
@@ -295,7 +306,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(dir.path().join("github.com/z/repo/.git")).unwrap();
         std::fs::create_dir_all(dir.path().join("github.com/a/repo/.git")).unwrap();
-        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()], &[]).unwrap();
         assert_eq!(repos.len(), 2);
         assert!(repos[0].path < repos[1].path);
     }
@@ -304,7 +315,7 @@ mod tests {
     fn test_scan_sets_base_field() {
         let dir = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(dir.path().join("github.com/owner/repo/.git")).unwrap();
-        let repos = scan(&[dir.path().to_path_buf()]).unwrap();
+        let repos = scan(&[dir.path().to_path_buf()], &[]).unwrap();
         assert_eq!(repos[0].base, dir.path());
     }
 }

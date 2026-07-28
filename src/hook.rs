@@ -198,6 +198,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -217,6 +218,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![],
         };
@@ -232,6 +234,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -255,6 +258,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -279,6 +283,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("C:\\tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -301,6 +306,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -323,6 +329,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("C:\\tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -349,6 +356,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks,
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -369,6 +377,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -387,6 +396,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -407,6 +417,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -431,6 +442,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -453,6 +465,7 @@ mod tests {
         let config = Config {
             base: crate::config::BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),

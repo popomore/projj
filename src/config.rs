@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
@@ -10,6 +10,8 @@ pub struct Config {
     pub base: BaseDir,
     #[serde(default = "default_platform")]
     pub platform: String,
+    #[serde(default)]
+    pub exclude_dirs: Vec<String>,
     #[serde(default)]
     pub tasks: HashMap<String, String>,
     #[serde(default)]
@@ -76,27 +78,35 @@ impl Config {
         }
     }
 
+    pub fn exclude_dirs(&self) -> Vec<PathBuf> {
+        self.exclude_dirs.iter().map(PathBuf::from).collect()
+    }
+
     fn resolve_paths(&mut self) {
         let home = dirs::home_dir().unwrap_or_default();
-        let resolve = |s: &str| -> String {
-            if s == "~" {
-                home.to_string_lossy().to_string()
-            } else if let Some(rest) = s.strip_prefix("~/") {
-                home.join(rest).to_string_lossy().to_string()
-            } else if s.starts_with('.') {
-                config_dir().join(s).to_string_lossy().to_string()
-            } else {
-                s.to_string()
-            }
-        };
         match &mut self.base {
-            BaseDir::Single(s) => *s = resolve(s),
+            BaseDir::Single(s) => *s = resolve_path(s, &home),
             BaseDir::Multiple(v) => {
                 for s in v.iter_mut() {
-                    *s = resolve(s);
+                    *s = resolve_path(s, &home);
                 }
             }
         }
+        for s in &mut self.exclude_dirs {
+            *s = resolve_path(s, &home);
+        }
+    }
+}
+
+fn resolve_path(s: &str, home: &Path) -> String {
+    if s == "~" {
+        home.to_string_lossy().to_string()
+    } else if let Some(rest) = s.strip_prefix("~/") {
+        home.join(rest).to_string_lossy().to_string()
+    } else if s.starts_with('.') {
+        config_dir().join(s).to_string_lossy().to_string()
+    } else {
+        s.to_string()
     }
 }
 
@@ -159,6 +169,7 @@ tasks = ["clean"]
         let config = Config {
             base: BaseDir::Single("/tmp/projj".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: vec![],
             tasks: HashMap::new(),
             hooks: vec![],
         };
@@ -170,6 +181,7 @@ tasks = ["clean"]
         let config = Config {
             base: BaseDir::Multiple(vec!["/tmp/a".to_string(), "/tmp/b".to_string()]),
             platform: "github.com".to_string(),
+            exclude_dirs: vec![],
             tasks: HashMap::new(),
             hooks: vec![],
         };
@@ -212,6 +224,31 @@ tasks = ["clean"]
     }
 
     #[test]
+    fn test_parse_exclude_dirs() {
+        let toml = r#"
+base = "/tmp/projj"
+exclude_dirs = ["~/Developer/tries", "/tmp/scratch"]
+"#;
+        let config: Config = toml::from_str(toml).unwrap();
+        assert_eq!(
+            config.exclude_dirs,
+            vec!["~/Developer/tries".to_string(), "/tmp/scratch".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_resolve_paths_exclude_dirs_tilde() {
+        let toml = r#"
+base = "/tmp/projj"
+exclude_dirs = ["~/Developer/tries"]
+"#;
+        let mut config: Config = toml::from_str(toml).unwrap();
+        config.resolve_paths();
+        let home = dirs::home_dir().unwrap();
+        assert_eq!(config.exclude_dirs(), vec![home.join("Developer/tries")]);
+    }
+
+    #[test]
     fn test_resolve_paths_multiple() {
         let toml = r#"base = ["~/a", "/b"]"#;
         let mut config: Config = toml::from_str(toml).unwrap();
@@ -241,6 +278,7 @@ tasks = ["clean"]
         let config = Config {
             base: BaseDir::Single("/tmp/projj".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: vec![],
             tasks: HashMap::new(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),

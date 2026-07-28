@@ -11,7 +11,7 @@ use crate::select;
 
 pub fn run(keyword: &str) -> Result<()> {
     let config = Config::load()?;
-    let repos = repo_source::scan(&config.base_dirs())?;
+    let repos = repo_source::scan(&config.base_dirs(), &config.exclude_dirs())?;
     let matched = repo_source::find(&repos, keyword);
 
     if matched.is_empty() {

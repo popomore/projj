@@ -6,7 +6,7 @@ use crate::select;
 
 pub fn run(keyword: Option<&str>) -> Result<()> {
     let config = Config::load()?;
-    let repos = repo_source::scan(&config.base_dirs())?;
+    let repos = repo_source::scan(&config.base_dirs(), &config.exclude_dirs())?;
     let has_multiple_bases = config.base_dirs().len() > 1;
 
     let matched: Vec<Repo> = if let Some(kw) = keyword {

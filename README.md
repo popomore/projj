@@ -141,6 +141,7 @@ projj list --raw        # plain paths, one per line (for piping)
 ```toml
 base = ["/Users/x/projj", "/Users/x/work"]
 platform = "github.com"
+exclude_dirs = ["~/Developer/tries"]
 
 [tasks]
 update = "git fetch && git pull origin -p"
@@ -168,6 +169,7 @@ env = { GIT_USER_NAME = "Other Name", GIT_USER_EMAIL = "other@corp.com" }
 |-------|-------------|---------|
 | `base` | Root directory (string or array) | `~/projj` |
 | `platform` | Default host for short form `owner/repo` | `github.com` |
+| `exclude_dirs` | Directories to skip when scanning `base` | `[]` |
 | `tasks` | Named tasks (see [Tasks](#tasks)) | `{}` |
 | `hooks` | Event-driven hooks (see [Hooks](#hooks)) | `[]` |
 
