@@ -66,6 +66,7 @@ mod tests {
         let config = Config {
             base: BaseDir::Single("/tmp/projj".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![],
         };

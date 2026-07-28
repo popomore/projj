@@ -27,6 +27,7 @@ pub fn run() -> Result<()> {
         let config = Config {
             base: BaseDir::Single(base),
             platform,
+            exclude_dirs: Vec::default(),
             tasks: HashMap::default(),
             hooks: vec![HookEntry {
                 event: "post_add".to_string(),
@@ -46,7 +47,7 @@ pub fn run() -> Result<()> {
     task::install_builtins()?;
 
     // Show what was configured
-    let repos = repo_source::scan(&config.base_dirs())?;
+    let repos = repo_source::scan(&config.base_dirs(), &config.exclude_dirs())?;
     eprintln!(
         "📊 {} base directories, {} repositories found",
         config.base_dirs().len(),

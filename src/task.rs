@@ -115,6 +115,7 @@ mod tests {
         Config {
             base: BaseDir::Single("/tmp".to_string()),
             platform: "github.com".to_string(),
+            exclude_dirs: Vec::new(),
             tasks: HashMap::new(),
             hooks: vec![],
         }
